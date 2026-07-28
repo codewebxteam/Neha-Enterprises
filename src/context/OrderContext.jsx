@@ -1,0 +1,164 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { realtimeDb } from '../firebase';
+import { ref, push, set, onValue, off, update } from 'firebase/database';
+import { useAuth } from './AuthContext';
+
+const OrderContext = createContext();
+
+export const useOrders = () => {
+    const context = useContext(OrderContext);
+    if (!context) {
+        throw new Error('useOrders must be used within an OrderProvider');
+    }
+    return context;
+};
+
+export const OrderProvider = ({ children }) => {
+    const [orders, setOrders] = useState([]);
+    const { user } = useAuth();
+
+    // Persist to localStorage whenever orders change
+    useEffect(() => {
+        if (orders.length > 0) {
+            localStorage.setItem('local_orders', JSON.stringify(orders));
+        }
+    }, [orders]);
+
+    useEffect(() => {
+
+        if (!user) return;
+
+        const ordersRef = ref(realtimeDb, 'orders');
+        const handleData = (snapshot) => {
+            try {
+                const data = snapshot.val();
+                if (data) {
+                    const firebaseOrders = Object.keys(data)
+                        .map(key => ({ ...data[key], firebaseId: key }))
+                        .filter(order => order.email === user.email);
+
+                    // Merge Firebase orders with local orders, avoiding duplicates
+                    setOrders(prev => {
+                        const merged = [...firebaseOrders];
+                        const firebaseIds = new Set(firebaseOrders.map(o => o.id));
+
+                        prev.forEach(localOrder => {
+                            if (!firebaseIds.has(localOrder.id)) {
+                                merged.push(localOrder);
+                            }
+                        });
+
+                        return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    });
+                }
+            } catch (error) {
+                console.error("Error syncing orders:", error);
+            }
+        };
+
+        onValue(ordersRef, handleData);
+        return () => off(ordersRef, 'value', handleData);
+    }, [user]);
+
+    const placeOrder = async (orderData) => {
+        const now = new Date();
+        const ordersRef = ref(realtimeDb, 'orders');
+        const newOrderRef = push(ordersRef);
+
+        const newOrder = {
+            id: `ORD${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+            date: now.toISOString(),
+            status: 'Pending',
+            customer: user?.displayName || user?.name || orderData.fullName,
+            email: user?.email || orderData.email,
+            mobile: orderData.mobile,
+            items: orderData.items,
+            subtotal: orderData.subtotal,
+            tax: orderData.tax,
+            grandTotal: orderData.grandTotal,
+            userId: user?.id || 'guest',
+            payment: orderData.paymentMethod || 'cod',
+            address: {
+                fullName: orderData.fullName,
+                mobile: orderData.mobile,
+                street: orderData.street,
+                locality: orderData.locality,
+                city: orderData.city,
+                state: orderData.state,
+                pincode: orderData.pincode,
+            },
+            orderId: `ORD${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+            shippingAddress: {
+                fullName: orderData.fullName,
+                mobile: orderData.mobile,
+                street: orderData.street,
+                locality: orderData.locality,
+                city: orderData.city,
+                state: orderData.state,
+                pincode: orderData.pincode,
+                phone: orderData.mobile
+            },
+            timeline: [
+                { status: 'Pending', date: now.toISOString(), completed: true, desc: 'Awaiting confirmation from admin.' },
+                { status: 'Placed', date: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString(), completed: false, desc: 'Order will be placed after confirmation.' },
+                { status: 'Confirmed', date: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(), completed: false, desc: 'We are confirming your order.' },
+                { status: 'Shipped', date: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(), completed: false, desc: 'Your order is on the way.' },
+                { status: 'Delivered', date: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString(), completed: false, desc: 'Order delivered.' }
+            ]
+        };
+
+        // Optimistic update
+        setOrders(prev => [newOrder, ...prev]);
+
+        // Fire-and-forget to prevent UI blocking if Firebase is slow or offline
+        set(newOrderRef, newOrder).catch(error => {
+            console.error("Firebase order save failed, but saved locally:", error);
+        });
+
+        return { ...newOrder, firebaseId: newOrderRef.key };
+    };
+
+    const getOrderById = (id) => orders.find(o => o.id === id || o.firebaseId === id);
+
+    const cancelOrder = async (firebaseId, reason = 'Cancelled by User') => {
+        const order = orders.find(o => o.firebaseId === firebaseId || o.id === firebaseId);
+
+        if (!order) {
+            console.error("Order not found for cancellation:", firebaseId);
+            return false;
+        }
+
+        const targetId = order.firebaseId || firebaseId;
+        const actualOrderRef = ref(realtimeDb, `orders/${targetId}`);
+
+        let updatedTimeline = order.timeline ? [...order.timeline] : [];
+        updatedTimeline = updatedTimeline.filter(s => s.status === 'Pending' || s.status === 'Placed');
+        updatedTimeline.push({
+            status: 'Cancelled',
+            date: new Date().toISOString(),
+            completed: true,
+            desc: `Order Cancelled (${reason})`
+        });
+
+        // Optimistically update local state
+        setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'Cancelled', cancelReason: reason, timeline: updatedTimeline } : o));
+
+        try {
+            await update(actualOrderRef, {
+                status: 'Cancelled',
+                cancelReason: reason,
+                timeline: updatedTimeline
+            });
+            return true;
+        } catch (error) {
+            console.error("Firebase cancel order failed:", error);
+            return false;
+        }
+    };
+
+    return (
+        <OrderContext.Provider value={{ orders, placeOrder, getOrderById, cancelOrder }}>
+            {children}
+        </OrderContext.Provider>
+    );
+};

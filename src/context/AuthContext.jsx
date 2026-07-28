@@ -1,0 +1,203 @@
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import {
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    signInWithRedirect,
+    getRedirectResult,
+    updateProfile
+} from 'firebase/auth';
+import { auth, googleProvider, realtimeDb } from '../firebase';
+import { ref, update, get } from 'firebase/database';
+import Loader from '../components/common/Loader';
+
+
+const adminEmails = ['meraj786@gmail.com', 'gokulgorakhpur@gmail.com', 'gokulgorakhpur.admin@gmail.com', 'admin@gmail.com'];
+
+export const isAdminEmail = (email) => {
+    if (!email) return false;
+    const lowerEmail = email.toLowerCase();
+    return adminEmails.includes(lowerEmail);
+};
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [authView, setAuthView] = useState('login');
+
+    const openAuthModal = (view = 'login') => {
+        setAuthView(view);
+        setIsAuthModalOpen(true);
+    };
+
+    const closeAuthModal = () => setIsAuthModalOpen(false);
+
+    useEffect(() => {
+        // Handle Google Redirect Result
+        getRedirectResult(auth).catch((error) => {
+            console.error("Google Redirect Login Error:", error.code, error.message);
+        });
+
+        const safetyTimeout = setTimeout(() => {
+            if (loading) {
+                console.warn("Auth initialization safety timeout reached.");
+                setLoading(false);
+            }
+        }, 10000);
+
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            clearTimeout(safetyTimeout);
+            if (currentUser) {
+                let dbUserData = null;
+                try {
+                    const userRef = ref(realtimeDb, `users/${currentUser.uid}`);
+                    const snapshot = await get(userRef);
+                    if (snapshot.exists()) {
+                        dbUserData = snapshot.val();
+                    }
+                } catch (error) {
+                    console.warn("DB Fetch Error in auth change:", error.message);
+                }
+
+                const isAdmin = isAdminEmail(currentUser.email) || (dbUserData && dbUserData.role === 'admin');
+                
+                const userData = {
+                    id: currentUser.uid,
+                    email: currentUser.email || null,
+                    name: currentUser.displayName || (dbUserData && dbUserData.name) || currentUser.email.split('@')[0],
+                    photo: currentUser.photoURL || (dbUserData && dbUserData.photo) || null,
+                    role: isAdmin ? 'admin' : 'member',
+                    joinedAt: currentUser.metadata.creationTime || (dbUserData && dbUserData.joinedAt) || null,
+                    lastLogin: new Date().toISOString()
+                };
+                setUser(userData);
+                console.log("Auth State Changed: User detected with role:", userData.role, "Email:", userData.email);
+
+                // Persist user to Realtime Database
+                const userRef = ref(realtimeDb, `users/${currentUser.uid}`);
+                update(userRef, userData).catch(error => {
+                    console.warn("DB Update Error (likely permissions):", error.message);
+                });
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        });
+        return () => {
+            unsubscribe();
+            clearTimeout(safetyTimeout);
+        };
+    }, []);
+
+    const login = useCallback(async (email, password) => {
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            return { success: true };
+        } catch (error) {
+            console.error("Login Error:", error.code, error.message);
+            let errorMessage = 'Invalid email or password';
+
+            if (error.code === 'auth/user-not-found') {
+                errorMessage = 'Account not found. Please sign up first.';
+            } else if (error.code === 'auth/wrong-password') {
+                errorMessage = 'Incorrect password. Please try again.';
+            } else if (error.code === 'auth/invalid-credential') {
+                errorMessage = 'Invalid credentials. Check email/password or sign up if new.';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Please enter a valid email address.';
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = 'Too many attempts. Access temporarily blocked. Please wait a few minutes.';
+            }
+
+            return { success: false, message: `${errorMessage} (${error.code})`, code: error.code };
+        }
+    }, []);
+
+    const signup = useCallback(async (name, email, password) => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCredential.user, { displayName: name });
+
+            // Explicitly force update DB with correct name to avoid race condition with onAuthStateChanged
+            const userData = {
+                id: userCredential.user.uid,
+                email: userCredential.user.email,
+                name: name,
+                role: 'member',
+                joinedAt: userCredential.user.metadata.creationTime || new Date().toISOString(),
+                lastLogin: new Date().toISOString()
+            };
+            const userRef = ref(realtimeDb, `users/${userCredential.user.uid}`);
+            await update(userRef, userData);
+
+            return { success: true };
+        } catch (error) {
+            console.error("Signup Error:", error.code, error.message);
+            let errorMessage = 'Signup failed. Please try again.';
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'This email is already registered. Try logging in.';
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = 'Password is too weak. Use at least 6 characters.';
+            }
+            return { success: false, message: errorMessage };
+        }
+    }, []);
+
+    const loginWithGoogle = useCallback(async () => {
+        try {
+            await signInWithRedirect(auth, googleProvider);
+            return { success: true };
+        } catch (error) {
+            console.error("Google Login Error:", error.code, error.message);
+            let errorMessage = 'Google Login failed';
+
+            if (error.code === 'auth/unauthorized-domain') {
+                errorMessage = 'This domain is not authorized for Google Login. Please add your domain to Firebase console.';
+            }
+
+            return { success: false, message: `${errorMessage} (${error.code})`, code: error.code };
+        }
+    }, []);
+
+    const logout = useCallback(async () => {
+        try {
+            await signOut(auth);
+            return true;
+        } catch (error) {
+            console.error("Logout Error:", error.message);
+            return false;
+        }
+    }, []);
+
+    return (
+        <AuthContext.Provider value={{
+            user,
+            login,
+            signup,
+            loginWithGoogle,
+            logout,
+            loading,
+            isAuthModalOpen,
+            authView,
+            openAuthModal,
+            closeAuthModal
+        }}>
+            {loading ? <Loader /> : children}
+        </AuthContext.Provider>
+    );
+};
+
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};
+
+export default AuthContext;
