@@ -25,7 +25,7 @@ const Testimonials = () => {
     {
       name: "Ravi Kumar",
       role: "Software Engineer",
-      msg: "I was looking for fresh organic produce in Gorakhpur and Gokul Gorakhpur delivered exactly what I needed. The quality of fruits is unmatched.",
+      msg: "I was looking for fresh organic produce in Gorakhpur and Neha Enterprises delivered exactly what I needed. The quality of fruits is unmatched.",
       tag: "Verified Shopper",
       image: 'ravi', // Match sync naming
       accent: "from-amber-500 to-orange-600",
@@ -34,7 +34,7 @@ const Testimonials = () => {
     {
       name: "Priya Singh",
       role: "Lifestyle Blogger",
-      msg: "The variety and freshness at Gokul Gorakhpur are incredible. Their delivery is always on time, which is a lifesaver for my busy schedule.",
+      msg: "The variety and freshness at Neha Enterprises are incredible. Their delivery is always on time, which is a lifesaver for my busy schedule.",
       tag: "Quality Enthusiast",
       image: 'priya',
       accent: "from-teal-500 to-emerald-600",
@@ -43,7 +43,7 @@ const Testimonials = () => {
     {
       name: "Amit Patel",
       role: "Local Business Owner",
-      msg: "Supporting local businesses is important to me, and Gokul Gorakhpur makes it easy with their high-quality local produce. Best grocery app I've used.",
+      msg: "Supporting local businesses is important to me, and Neha Enterprises makes it easy with their high-quality local produce. Best grocery app I've used.",
       tag: "Verified Buyer",
       image: 'amit',
       accent: "from-orange-500 to-amber-500",
@@ -136,7 +136,7 @@ const Testimonials = () => {
             transition={{ delay: 0.2 }}
             className="text-slate-500 text-base sm:text-lg max-w-xl mx-auto font-medium leading-relaxed"
           >
-            Discover why Gokul Gorakhpur is the preferred choice for premium groceries and household essentials across the city.
+            Discover why Neha Enterprises is the preferred choice for premium groceries and household essentials across the city.
           </motion.p>
         </div>
 

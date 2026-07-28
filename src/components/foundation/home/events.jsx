@@ -31,7 +31,7 @@ const Events = () => {
 
   const [foundationEvents, setFoundationEvents] = useState([
     {
-      title: "Gokul Gorakhpur Grand Opening",
+      title: "Neha Enterprises Grand Opening",
       date: "04",
       month: "june",
       location: "bihata Main Market Hub",
@@ -120,7 +120,7 @@ const Events = () => {
           </h3>
           
           <p className="text-base text-slate-600 font-medium max-w-xl leading-relaxed">
-            Gokul Gorakhpur sirf ek grocery store nahi hai. Hum community aur sustainability mein believe karte hain. 
+            Neha Enterprises sirf ek grocery store nahi hai. Hum community aur sustainability mein believe karte hain. 
             Hamare events aapko shuddhata aur behtar lifestyle se jodte hain.
           </p>
 
@@ -261,7 +261,7 @@ const Events = () => {
               onClick={handleGeneralJoinWhatsApp}
               className="w-full sm:w-auto shrink-0 px-8 py-5 bg-white text-slate-900 font-serif rounded-full text-[11px] font-black uppercase tracking-widest hover:bg-gradient-to-r hover:from-amber-400 hover:to-orange-500 hover:text-white transition-all duration-300 shadow-xl active:scale-[0.98] flex items-center justify-center gap-3 group/btn"
             >
-              Join Gokul Gorakhpur 
+              Join Neha Enterprises 
               <ArrowRight size={16} className="transform group-hover/btn:translate-x-1 transition-transform" />
             </button>
           </div>

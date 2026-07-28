@@ -34,7 +34,7 @@ const Maintenance = ({ message }) => {
           transition={{ delay: 0.3 }}
           className="text-lg text-slate-500 font-medium mb-12 max-w-lg mx-auto leading-relaxed"
         >
-          {message || "Gokul Gorakhpur is currently under scheduled maintenance to bring you a better shopping experience. We'll be back shortly!"}
+          {message || "Neha Enterprises is currently under scheduled maintenance to bring you a better shopping experience. We'll be back shortly!"}
         </motion.p>
 
         <motion.div

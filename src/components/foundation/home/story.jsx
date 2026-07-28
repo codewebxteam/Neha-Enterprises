@@ -63,7 +63,7 @@ const Story = () => {
         <div className="relative w-full rounded-[1.5rem] md:rounded-[2.5rem] lg:rounded-[3.5rem] overflow-hidden shadow-2xl mb-10 group bg-slate-900">
           <img
             src={unnatiHero}
-            alt="The Gokul Gorakhpur Store"
+            alt="The Neha Enterprises Store"
             className="w-full h-auto block transition-transform duration-[2s] group-hover:scale-105"
           />
           {/* dark overlay for text contrast across the whole banner */}
@@ -88,7 +88,7 @@ const Story = () => {
               <span className="text-amber-500">Traditional Purity.</span>
             </p>
             <p className="text-xs lg:text-sm text-slate-500 font-medium leading-relaxed max-w-sm">
-              Gokul Gorakhpur brings you the finest selection of daily essentials. 
+              Neha Enterprises brings you the finest selection of daily essentials. 
               We bridge the gap between quality producers and your kitchen, 
               ensuring every item meets our high standards of freshness and purity.
             </p>

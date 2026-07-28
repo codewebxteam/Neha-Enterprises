@@ -836,7 +836,7 @@ const AdminInventory = () => {
                                             value={editProduct.specification}
                                             onChange={handleEditInputChange}
                                             rows="3"
-                                            placeholder="Brand: Gokul Gorakhpur\nWeight: 500g\nStorage: Keep Refrigerated"
+                                            placeholder="Brand: Neha Enterprises\nWeight: 500g\nStorage: Keep Refrigerated"
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all resize-none custom-scrollbar"
                                         ></textarea>
                                     </div>
@@ -1086,7 +1086,7 @@ const AdminInventory = () => {
                                             value={newProduct.specification}
                                             onChange={handleInputChange}
                                             rows="3"
-                                            placeholder="Brand: Gokul Gorakhpur\nWeight: 500g\nStorage: Keep Refrigerated"
+                                            placeholder="Brand: Neha Enterprises\nWeight: 500g\nStorage: Keep Refrigerated"
                                             className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all resize-none custom-scrollbar"
                                         ></textarea>
                                     </div>

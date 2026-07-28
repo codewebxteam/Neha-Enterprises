@@ -42,7 +42,7 @@ const CheckoutModal = ({ onClose }) => {
 
     const handleShareSummary = () => {
         const itemsList = cartItems.map(item => `- ${item.name} (x${item.quantity})`).join('\n');
-        const message = `🛒 *Cart Summary - Gokul Gorakhpur*\n\n` +
+        const message = `🛒 *Cart Summary - Neha Enterprises*\n\n` +
             `Check out these items I'm about to order!\n\n` +
             `*Items:*\n${itemsList}\n\n` +
             `*Total Amount:* ₹${grandTotal.toLocaleString('en-IN')}\n\n` +
@@ -50,7 +50,7 @@ const CheckoutModal = ({ onClose }) => {
 
         if (navigator.share) {
             navigator.share({
-                title: 'My Gokul Gorakhpur Cart',
+                title: 'My Neha Enterprises Cart',
                 text: message,
             }).catch(console.error);
         } else {

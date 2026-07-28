@@ -12,7 +12,7 @@ const LegalModal = ({ isOpen, onClose, type }) => {
       title: 'Privacy Policy',
       lastUpdated: 'March 10, 2026',
       sections: [
-        { heading: '1. Information We Collect', text: 'At Gokul Gorakhpur, we collect personal information such as your name, email address, shipping address, and phone number when you place an order for our farm products or subscribe to our newsletter.' },
+        { heading: '1. Information We Collect', text: 'At Neha Enterprises, we collect personal information such as your name, email address, shipping address, and phone number when you place an order for our farm products or subscribe to our newsletter.' },
         { heading: '2. How We Use Your Information', text: 'We use your data strictly to process your orders, schedule deliveries for fresh products, and send you important updates regarding your purchases.' },
         { heading: '3. Data Security', text: 'Your privacy is as important to us as the purity of our products. We implement industry-standard security measures to ensure your personal information is protected against unauthorized access.' },
         { heading: '4. Sharing of Information', text: 'We do not sell, trade, or rent your personal identification information to others. We may share generic aggregated demographic information not linked to any personal identification internally.' }
@@ -23,7 +23,7 @@ const LegalModal = ({ isOpen, onClose, type }) => {
       title: 'Terms & Conditions',
       lastUpdated: 'March 10, 2026',
       sections: [
-        { heading: '1. Product Quality & Delivery', text: 'Gokul Gorakhpur guarantees the delivery of fresh, natural farm products. Customers must ensure someone is available to receive the delivery during the chosen time slot to maintain product freshness.' },
+        { heading: '1. Product Quality & Delivery', text: 'Neha Enterprises guarantees the delivery of fresh, natural farm products. Customers must ensure someone is available to receive the delivery during the chosen time slot to maintain product freshness.' },
         { heading: '2. Cancellations & Refunds', text: 'Orders for fresh produce can only be cancelled up to 12 hours before the scheduled delivery time. Refunds for quality issues must be reported within 6 hours of delivery with photographic evidence.' },
         { heading: '3. Pricing Changes', text: 'Our prices are subject to change based on seasonal availability and farming costs without prior notice. However, once an order is confirmed, the price will be honored.' },
         { heading: '4. User Responsibilities', text: 'By using our website, you agree to provide accurate and current information for all purchases. You are responsible for maintaining the confidentiality of your account and password.' }
@@ -91,7 +91,7 @@ const LegalModal = ({ isOpen, onClose, type }) => {
       title: 'Grievance Redressal',
       lastUpdated: 'March 10, 2026',
       sections: [
-        { heading: '1. Grievance Officer', text: 'In accordance with consumer protection rules, our Grievance Officer can be reached at grievance@gokulgorakhpur.com.' },
+        { heading: '1. Grievance Officer', text: 'In accordance with consumer protection rules, our Grievance Officer can be reached at grievance@nehaenterprises.com.' },
         { heading: '2. Resolution Timeline', text: 'We acknowledge complaints within 24 hours and aim to resolve them within 15 days of receipt.' }
       ]
     },
@@ -100,7 +100,7 @@ const LegalModal = ({ isOpen, onClose, type }) => {
       title: 'EPR Compliance',
       lastUpdated: 'March 10, 2026',
       sections: [
-        { heading: 'Extended Producer Responsibility', text: 'Gokul Gorakhpur is committed to environmental sustainability. We comply with EPR framing regarding plastic waste management and encourage returning packaging for reuse.' }
+        { heading: 'Extended Producer Responsibility', text: 'Neha Enterprises is committed to environmental sustainability. We comply with EPR framing regarding plastic waste management and encourage returning packaging for reuse.' }
       ]
     },
     'fssai': {
@@ -165,7 +165,7 @@ const LegalModal = ({ isOpen, onClose, type }) => {
             <div className="space-y-8 pr-2">
               <div className="prose prose-slate max-w-none">
                 <p className="text-slate-500 text-sm leading-relaxed mb-6">
-                  Please read these {content.title.toLowerCase()} carefully before using the Gokul Gorakhpur platform.
+                  Please read these {content.title.toLowerCase()} carefully before using the Neha Enterprises platform.
                   Your continued use of our services constitutes acceptance of these terms.
                 </p>
                 

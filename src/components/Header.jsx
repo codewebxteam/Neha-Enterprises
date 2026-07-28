@@ -129,8 +129,8 @@ const Header = () => {
               onClick={() => navigate('/')}
             >
               <img 
-                src="https://ik.imagekit.io/gokulgorakhpur/Gokul/LogoGokul.png?updatedAt=1784482561413" 
-                alt="Gokul Gorakhpur" 
+                src="https://ik.imagekit.io/gokulgorakhpur/Gokul/newlogo.jpeg" 
+                alt="Neha Enterprises" 
                 className="h-20 sm:h-24 w-auto object-contain mix-blend-multiply transition-all duration-300" 
               />
             </motion.div>

@@ -18,8 +18,8 @@ const AdminSettings = () => {
     // Form states for the settings
     const [formData, setFormData] = useState({
         // General Settings
-        storeName: 'Gokul Gorakhpur',
-        supportEmail: 'care@gokulgorakhpur.com',
+        storeName: 'Neha Enterprises',
+        supportEmail: 'care@nehaenterprises.com',
         supportPhone: '+91 9336020104',
         gstPercentage: '0',
         maintenanceMode: false,
@@ -40,8 +40,8 @@ const AdminSettings = () => {
         // Notification Settings
         orderEmails: true,
         promotionalEmails: false,
-        adminAlertsEmail: 'admin@gokulgorakhpur.com',
-        maintenanceMessage: 'Gokul Gorakhpur is currently under scheduled maintenance to bring you a better shopping experience. We\'ll be back shortly!'
+        adminAlertsEmail: 'admin@nehaenterprises.com',
+        maintenanceMessage: 'Neha Enterprises is currently under scheduled maintenance to bring you a better shopping experience. We\'ll be back shortly!'
     });
 
     useEffect(() => {

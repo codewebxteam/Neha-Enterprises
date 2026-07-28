@@ -22,7 +22,7 @@ const Contact = () => {
             return;
         }
         
-        const text = `Hello Gokul Gorakhpur,\n\nI am ${firstName} ${lastName}.\nEmail: ${email}\n\nMessage: ${message}`;
+        const text = `Hello Neha Enterprises,\n\nI am ${firstName} ${lastName}.\nEmail: ${email}\n\nMessage: ${message}`;
         const encodedText = encodeURIComponent(text);
         const whatsappUrl = `https://wa.me/919876543210?text=${encodedText}`;
         window.open(whatsappUrl, '_blank');
@@ -51,8 +51,8 @@ const Contact = () => {
             icon: <Mail size={28} className="text-[#27318a]" />,
             title: "Email Us",
             details: [
-                "info@gokulgorakhpur.com",
-                "support@gokulgorakhpur.com"
+                "info@nehaenterprises.com",
+                "support@nehaenterprises.com"
             ],
             color: "bg-emerald-50"
         }
@@ -215,7 +215,7 @@ const Contact = () => {
                             allowFullScreen="" 
                             loading="lazy" 
                             referrerPolicy="no-referrer-when-downgrade"
-                            title="Gokul Gorakhpur Map"
+                            title="Neha Enterprises Map"
                             className="absolute inset-0 grayscale hover:grayscale-0 transition-all duration-700"
                         ></iframe>
 

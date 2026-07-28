@@ -7,7 +7,7 @@ const ShareModal = ({ isOpen, onClose, product }) => {
     const [copied, setCopied] = useState(false);
     useScrollLock(isOpen);
     const shareUrl = window.location.href;
-    const shareText = `Check out this ${product?.name} on Gokul Gorakhpur!`;
+    const shareText = `Check out this ${product?.name} on Neha Enterprises!`;
 
     const handleCopyLink = () => {
         navigator.clipboard.writeText(shareUrl);

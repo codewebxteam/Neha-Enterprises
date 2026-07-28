@@ -237,7 +237,7 @@ const AdminLayout = () => {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[15px] font-black tracking-tight text-white leading-tight">
-                                Gokul Gorakhpur
+                                Neha Enterprises
                             </span>
                             <span className="text-[9px] font-black text-slate-500 tracking-[0.2em] uppercase mt-1">
                                 Admin Panel

@@ -8,7 +8,7 @@ const Gallery = () => {
       </div>
       <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-4">Farm Gallery</h1>
       <p className="text-slate-500 max-w-lg mb-8">
-        We are currently curating our best snapshots of the Gokul Gorakhpur farm. Check back soon for beautiful pictures of our farm-fresh processes and high-quality inventories!
+        We are currently curating our best snapshots of the Neha Enterprises farm. Check back soon for beautiful pictures of our farm-fresh processes and high-quality inventories!
       </p>
     </div>
   );

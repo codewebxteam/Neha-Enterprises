@@ -42,8 +42,8 @@ const Success = () => {
 
     const handleShareOrder = () => {
         const itemsList = orderDetails.items?.map(item => `- ${item.name} (x${item.quantity})`).join('\n') || '';
-        const message = `🛍️ *Order Confirmation - Gokul Gorakhpur*\n\n` +
-            `Hello! I've placed an order on Gokul Gorakhpur.\n\n` +
+        const message = `🛍️ *Order Confirmation - Neha Enterprises*\n\n` +
+            `Hello! I've placed an order on Neha Enterprises.\n\n` +
             `*Order Summary:*\n${itemsList}\n\n` +
             `*Total Amount:* ₹${orderDetails.grandTotal?.toLocaleString('en-IN') || 'N/A'}\n` +
             `*Expected Delivery:* ${deliveryDateStr}\n\n` +
@@ -51,7 +51,7 @@ const Success = () => {
 
         if (navigator.share) {
             navigator.share({
-                title: 'Gokul Gorakhpur Order',
+                title: 'Neha Enterprises Order',
                 text: message,
             }).catch(console.error);
         } else {

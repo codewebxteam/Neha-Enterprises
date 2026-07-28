@@ -13,13 +13,13 @@ const Footer = () => {
                     <div className="flex flex-col pr-0 lg:pr-4">
                         <Link to="/" className="inline-block mb-6">
                             <img 
-                                src="https://ik.imagekit.io/gokulgorakhpur/Gokul/logo.jpeg?updatedAt=1784482131987" 
-                                alt="Gokul Gorakhpur" 
+                                src="https://ik.imagekit.io/gokulgorakhpur/Gokul/newlogo.jpeg" 
+                                alt="Neha Enterprises" 
                                 className="h-16 w-auto object-contain mix-blend-multiply"
                             />
                         </Link>
                         <p className="text-[#333333] text-sm leading-relaxed mb-8 font-medium">
-                            <strong>Gokul Gorakhpur</strong> is an Authorized Independent Distributor of Gokul Snacks. We specialize in delivering fresh, handcrafted Namkeen, Snacks, Wafers, and Bakery items across Gorakhpur.
+                            <strong>Neha Enterprises</strong> is an Authorized Independent Distributor of Gokul Snacks. We specialize in delivering fresh, handcrafted Namkeen, Snacks, Wafers, and Bakery items across Gorakhpur.
                         </p>
                         
                         {/* Social Icons */}
@@ -85,8 +85,8 @@ const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3 text-sm text-[#333333] font-medium">
                                 <Mail size={16} className="text-[#27318a] shrink-0" />
-                                <a href="mailto:info@gokulgorakhpur.com" className="hover:text-[#27318a] transition-colors">
-                                    info@gokulgorakhpur.com
+                                <a href="mailto:info@nehaenterprises.com" className="hover:text-[#27318a] transition-colors">
+                                    info@nehaenterprises.com
                                 </a>
                             </li>
                             <li className="flex items-center gap-3 text-sm text-[#333333] font-medium">
@@ -131,7 +131,7 @@ const Footer = () => {
                         <strong>Disclaimer:</strong> This website is operated by an Authorized Independent Distributor of Gokul Snacks. All brand names, logos, and trademarks (including "Gokul") are the property of their respective owners. This platform is solely for the distribution and supply of products in the designated region and does not claim to be the official parent company's website.
                     </p>
                     <p className="text-[#fce513] text-xs sm:text-sm font-semibold tracking-wide">
-                        Copyright &copy; {new Date().getFullYear()} Gokul Gorakhpur (Independent Distributor). All Rights Reserved.
+                        Copyright &copy; {new Date().getFullYear()} Neha Enterprises (Independent Distributor). All Rights Reserved.
                     </p>
                 </div>
             </div>
