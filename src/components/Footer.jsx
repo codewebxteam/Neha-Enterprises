@@ -135,7 +135,7 @@ const Footer = () => {
                             Copyright &copy; {new Date().getFullYear()} Neha Enterprises (Independent Distributor). All Rights Reserved.
                         </p>
                         <a 
-                            href="https://neha-enterprises-blush.vercel.app/admin/login" 
+                            href="https://www.gokulnamkeengorakhpur.in/admin/login" 
                             className="text-white/40 hover:text-[#fce513] text-[10px] sm:text-xs font-medium transition-colors border border-white/10 hover:border-[#fce513]/50 px-3 py-1 rounded-full"
                         >
                             Admin Login
