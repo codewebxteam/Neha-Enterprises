@@ -71,7 +71,7 @@ const Hero = () => {
       </div>
 
       {/* Mobile Image Slider (Top Half) */}
-      <div className="block lg:hidden relative w-full h-[55vh] min-h-[400px] pt-[42px]">
+      <div className="block lg:hidden relative w-full h-[55vh] min-h-[400px] pt-[32px] sm:pt-[42px]">
         <div className="relative w-full h-full">
           <AnimatePresence>
             <motion.div
