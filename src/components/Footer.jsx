@@ -85,13 +85,13 @@ const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3 text-sm text-[#333333] font-medium">
                                 <Mail size={16} className="text-[#27318a] shrink-0" />
-                                <a href="mailto:info@nehaenterprises.com" className="hover:text-[#27318a] transition-colors">
-                                    info@nehaenterprises.com
+                                <a href="mailto:gokulgorakhpur26@gmail.com" className="hover:text-[#27318a] transition-colors">
+                                    gokulgorakhpur26@gmail.com
                                 </a>
                             </li>
                             <li className="flex items-center gap-3 text-sm text-[#333333] font-medium">
                                 <PhoneCall size={16} className="text-[#27318a] shrink-0" />
-                                <span>Customer Care: +91-9876543210</span>
+                                <span>Customer Care: +91 8000668955</span>
                             </li>
                         </ul>
                     </div>
@@ -130,9 +130,17 @@ const Footer = () => {
                     <p className="text-white/70 text-[11px] sm:text-xs font-medium max-w-4xl leading-relaxed">
                         <strong>Disclaimer:</strong> This website is operated by an Authorized Independent Distributor of Gokul Snacks. All brand names, logos, and trademarks (including "Gokul") are the property of their respective owners. This platform is solely for the distribution and supply of products in the designated region and does not claim to be the official parent company's website.
                     </p>
-                    <p className="text-[#fce513] text-xs sm:text-sm font-semibold tracking-wide">
-                        Copyright &copy; {new Date().getFullYear()} Neha Enterprises (Independent Distributor). All Rights Reserved.
-                    </p>
+                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 mt-2">
+                        <p className="text-[#fce513] text-xs sm:text-sm font-semibold tracking-wide">
+                            Copyright &copy; {new Date().getFullYear()} Neha Enterprises (Independent Distributor). All Rights Reserved.
+                        </p>
+                        <a 
+                            href="https://neha-enterprises-blush.vercel.app/admin/login" 
+                            className="text-white/40 hover:text-[#fce513] text-[10px] sm:text-xs font-medium transition-colors border border-white/10 hover:border-[#fce513]/50 px-3 py-1 rounded-full"
+                        >
+                            Admin Login
+                        </a>
+                    </div>
                 </div>
             </div>
         </footer>

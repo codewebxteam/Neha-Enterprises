@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Package, ChevronRight, Box, ArrowLeft, X,
-    CheckCircle2, Clock, Truck, ShieldCheck, Star
+    CheckCircle2, Clock, Truck, ShieldCheck, Star, Download
 } from 'lucide-react';
 import { useOrders } from '../../context/OrderContext';
 import { useNavigate } from 'react-router-dom';
@@ -73,10 +73,10 @@ const OrdersPage = () => {
     const statusHierarchy = { 'Pending': 0, 'Placed': 1, 'Confirmed': 2, 'Shipped': 3, 'Delivered': 4 };
 
     return (
-        <div className="min-h-screen bg-[#fdfbf7] pt-[180px] sm:pt-[154px] pb-24 font-['Montserrat',sans-serif]">
+        <div className="min-h-screen bg-[#fdfbf7] pt-[128px] sm:pt-[154px] pb-24 font-['Montserrat',sans-serif]">
             
             {/* Header Section */}
-            <header className="bg-white border-b border-slate-200/60 sticky top-[180px] sm:top-[154px] z-40 shadow-xs">
+            <header className="bg-white border-b border-slate-200/60 shadow-xs">
                 <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-5 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <motion.button
@@ -169,9 +169,14 @@ const OrdersPage = () => {
                                                         className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300" 
                                                     />
                                                 </div>
-                                                <span className="text-xs font-bold text-[#333333] tracking-tight truncate max-w-[120px] text-center">
-                                                    {item.name}
-                                                </span>
+                                                <div className="flex flex-col items-center gap-1">
+                                                    <span className="text-xs font-bold text-[#333333] tracking-tight truncate max-w-[120px] text-center">
+                                                        {item.name}
+                                                    </span>
+                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                                        Qty: {item.quantity} {item.selectedUnit || item.unit || 'Pc'}
+                                                    </span>
+                                                </div>
                                                 {order.status === 'Delivered' && (
                                                     <motion.button
                                                         whileHover={{ scale: 1.05 }}
@@ -191,14 +196,38 @@ const OrdersPage = () => {
 
                                     {/* Order Footer & Actions */}
                                     <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-slate-100 bg-slate-50/50 -mx-6 -mb-6 p-6 sm:-mx-8 sm:-mb-8 sm:p-8">
-                                        <div>
+                                        <div className="flex flex-col">
                                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Total Wholesale Amount</p>
+                                            {order.adminDiscount > 0 && (
+                                                <p className="text-xs font-bold text-rose-500 line-through">
+                                                    ₹{((order.grandTotal || order.amount || 0) + order.adminDiscount).toLocaleString('en-IN')}
+                                                </p>
+                                            )}
                                             <p style={{ color: '#27318a' }} className="text-xl sm:text-2xl font-black font-mono">
                                                 ₹{(order.grandTotal || order.amount || 0).toLocaleString('en-IN')}
                                             </p>
+                                            {order.adminDiscount > 0 && (
+                                                <p className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-1 w-max">
+                                                    Admin Discount: -₹{order.adminDiscount.toLocaleString('en-IN')}
+                                                </p>
+                                            )}
                                         </div>
                                         
                                         <div className="flex items-center gap-3">
+                                            {order.status === 'Delivered' && (
+                                                <motion.button
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    onClick={() => {
+                                                        import('../../utils/invoiceGenerator').then(module => {
+                                                            module.generateInvoice(order);
+                                                        });
+                                                    }}
+                                                    className="px-5 py-2.5 bg-[#27318a] text-white hover:bg-[#1e2670] rounded-full text-xs font-bold uppercase tracking-wider transition-colors shadow-xs flex items-center gap-2"
+                                                >
+                                                    <Download size={14} /> Download Invoice
+                                                </motion.button>
+                                            )}
                                             {(order.status === 'Pending' || order.status === 'Placed') && (
                                                 <motion.button
                                                     whileHover={{ scale: 1.05 }}

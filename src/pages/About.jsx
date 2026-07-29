@@ -328,11 +328,23 @@ const AboutUs = () => {
                                     </a>
                                 </div>
                                 <div className="relative w-full h-[400px] sm:h-[500px] bg-slate-50">
-                                    <iframe 
-                                        src={`https://docs.google.com/gview?url=${encodeURIComponent(cert.url)}&embedded=true`} 
-                                        className="w-full h-full border-none"
-                                        title={cert.title}
-                                    />
+                                    <object 
+                                        data={cert.url} 
+                                        type="application/pdf"
+                                        className="w-full h-full"
+                                    >
+                                        <div className="flex flex-col items-center justify-center h-full p-6 text-center text-slate-500">
+                                            <p className="mb-4 text-sm font-bold">Your browser does not support embedded PDFs.</p>
+                                            <a 
+                                                href={cert.url} 
+                                                target="_blank" 
+                                                rel="noreferrer"
+                                                className="bg-[#27318a] text-white px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-[#fce513] hover:text-[#27318a] transition-colors"
+                                            >
+                                                Open Certificate
+                                            </a>
+                                        </div>
+                                    </object>
                                 </div>
                             </motion.div>
                         ))}

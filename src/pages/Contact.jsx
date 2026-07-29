@@ -24,7 +24,7 @@ const Contact = () => {
         
         const text = `Hello Neha Enterprises,\n\nI am ${firstName} ${lastName}.\nEmail: ${email}\n\nMessage: ${message}`;
         const encodedText = encodeURIComponent(text);
-        const whatsappUrl = `https://wa.me/919876543210?text=${encodedText}`;
+        const whatsappUrl = `https://wa.me/918000668955?text=${encodedText}`;
         window.open(whatsappUrl, '_blank');
     };
 
@@ -42,7 +42,7 @@ const Contact = () => {
             icon: <PhoneCall size={28} className="text-[#27318a]" />,
             title: "Call Us",
             details: [
-                "Customer Care: +91-9876543210",
+                "Customer Care: +91 8000668955",
                 "Available Mon-Sat, 9AM to 8PM"
             ],
             color: "bg-amber-50"
@@ -51,8 +51,7 @@ const Contact = () => {
             icon: <Mail size={28} className="text-[#27318a]" />,
             title: "Email Us",
             details: [
-                "info@nehaenterprises.com",
-                "support@nehaenterprises.com"
+                "gokulgorakhpur26@gmail.com"
             ],
             color: "bg-emerald-50"
         }
@@ -204,34 +203,39 @@ const Contact = () => {
                         </form>
                     </div>
 
-                    {/* Right: Map / Image area */}
-                    <div className="lg:w-1/2 bg-slate-100 relative min-h-[400px]">
-                        {/* Embedding a simple Google Maps iframe for Gorakhpur region */}
-                        <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1m2!1s0x3992b58cb5303df1%3A0xc6c765fa50017a43!2sGorakhpur%2C%20Uttar%20Pradesh!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" 
-                            width="100%" 
-                            height="100%" 
-                            style={{ border: 0, minHeight: '100%' }} 
-                            allowFullScreen="" 
-                            loading="lazy" 
-                            referrerPolicy="no-referrer-when-downgrade"
-                            title="Neha Enterprises Map"
-                            className="absolute inset-0 grayscale hover:grayscale-0 transition-all duration-700"
-                        ></iframe>
+                    {/* Right: Beautiful Image area */}
+                    <div className="lg:w-1/2 relative min-h-[400px] overflow-hidden group">
+                        {/* Premium Image Background */}
+                        <motion.img 
+                            initial={{ scale: 1.1 }}
+                            whileInView={{ scale: 1 }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            src="https://ik.imagekit.io/gokulgorakhpur/Gokul/Combo_Section.webp" 
+                            alt="Contact Us Neha Enterprises" 
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                        />
+                        
+                        {/* Subtle Dark Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#27318a]/90 via-[#27318a]/20 to-transparent opacity-80" />
 
-                        {/* Overlay info box */}
-                        <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-sm p-6 rounded-2xl shadow-xl border border-slate-100">
+                        {/* Overlay info box with Glassmorphism */}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            className="absolute bottom-6 left-6 right-6 bg-white/10 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-white/20"
+                        >
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center shrink-0">
-                                    <Clock size={24} className="text-amber-600" />
+                                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center shrink-0 border border-white/30 backdrop-blur-sm">
+                                    <Clock size={24} className="text-white drop-shadow-md" />
                                 </div>
                                 <div>
-                                    <h4 className="text-[#333333] font-bold text-sm mb-1">Business Hours</h4>
-                                    <p className="text-slate-500 text-xs font-medium">Monday - Saturday: 9:00 AM - 8:00 PM</p>
-                                    <p className="text-slate-500 text-xs font-medium">Sunday: Closed</p>
+                                    <h4 className="text-white font-bold text-sm mb-1 tracking-wide">Business Hours</h4>
+                                    <p className="text-white/80 text-xs font-medium">Monday - Saturday: 9:00 AM - 8:00 PM</p>
+                                    <p className="text-white/80 text-xs font-medium">Sunday: Closed</p>
                                 </div>
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
 
                 </div>

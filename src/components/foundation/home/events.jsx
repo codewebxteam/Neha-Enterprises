@@ -20,7 +20,7 @@ const Events = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
 
   // Admin WhatsApp details
-  const ADMIN_PHONE = "919060982706";
+  const ADMIN_PHONE = "918000668955";
 
   const [legacyStories, setLegacyStories] = useState([
     { title: "The Grand Launch", category: "Big Celebration", img: 'legacy1' },

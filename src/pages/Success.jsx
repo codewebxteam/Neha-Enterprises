@@ -61,7 +61,7 @@ const Success = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#f1f3f6] font-sans pb-16 pt-28 flex justify-center w-full">
+        <div className="min-h-screen bg-[#f1f3f6] font-sans pb-16 pt-[128px] sm:pt-[154px] flex justify-center w-full">
 
             {/* Main Content Constraint wrapper (matches desktop Flipkart view) */}
             <div className="w-full max-w-[1000px] flex flex-col gap-4 px-2">

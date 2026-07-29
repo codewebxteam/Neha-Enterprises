@@ -53,7 +53,7 @@ const AdminInventory = () => {
     const [newStock, setNewStock] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newProduct, setNewProduct] = useState({
-        name: '', price: '', discount: '', description: '', image: null, stock: '', category: 'Vegetables', unit: 'Per Box', specification: '', highlights: '', compressedImage: null, isProcessingImage: false
+        name: '', priceBox: '', priceLarri: '', larriPerBox: '', discount: '', description: '', image: null, stock: '', category: 'Select Category', specification: '', highlights: '', compressedImage: null, isProcessingImage: false
     });
     const [syncError, setSyncError] = useState(null);
     const [isClearModalOpen, setIsClearModalOpen] = useState(false);
@@ -63,7 +63,7 @@ const AdminInventory = () => {
     const [itemToDelete, setItemToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [editProduct, setEditProduct] = useState({
-        name: '', price: '', discount: '', description: '', image: null, stock: '', category: 'Vegetables', unit: 'Per Box', specification: '', highlights: '', compressedImage: null, isProcessingImage: false
+        name: '', priceBox: '', priceLarri: '', larriPerBox: '', discount: '', description: '', image: null, stock: '', category: 'Select Category', specification: '', highlights: '', compressedImage: null, isProcessingImage: false
     });
     const [searchQuery, setSearchQuery] = useState('');
     const [statusTab, setStatusTab] = useState('All');
@@ -155,7 +155,14 @@ const AdminInventory = () => {
             .filter(o => o.status === 'Pending' || o.status === 'Placed' || o.status === 'Confirmed')
             .reduce((acc, order) => {
                 const item = order.items?.find(i => i.firebaseId === productId || i.id === productId);
-                return acc + (item ? (item.quantity || 0) : 0);
+                if (item) {
+                    const qty = item.quantity || 0;
+                    if (item.selectedUnit === 'Box' && item.larriPerBox && item.larriPerBox > 0) {
+                        return acc + (qty * item.larriPerBox);
+                    }
+                    return acc + qty;
+                }
+                return acc;
             }, 0);
     };
 
@@ -175,16 +182,18 @@ const AdminInventory = () => {
     const handleUpdateClick = (item) => {
         setSelectedItem(item);
         setEditProduct({
+            id: item.id,
             name: item.name || '',
-            price: item.price || '',
-            discount: item.discount || 0,
+            priceBox: item.priceBox || item.price || '',
+            priceLarri: item.priceLarri || '',
+            discount: item.discount || '',
             description: item.description || '',
-            stock: item.stock || '',
-            category: item.category || 'Dairy Product',
-            unit: item.unit || 'Per Box',
+            image: item.image || null,
+            stock: (item.larriPerBox && item.larriPerBox > 0) ? Math.floor((item.stock || 0) / item.larriPerBox) : (item.stock || ''),
+            category: item.category || 'Select Category',
             specification: item.specification || '',
             highlights: item.highlights || '',
-            image: null,
+            larriPerBox: item.larriPerBox || '',
             compressedImage: null,
             isProcessingImage: false
         });
@@ -215,43 +224,39 @@ const AdminInventory = () => {
         if (isPublishing) return;
         setIsPublishing(true);
 
-        const stockNum = parseInt(editProduct.stock, 10);
+        const inputStock = parseInt(editProduct.stock, 10);
+        const larriPerBoxNum = parseInt(editProduct.larriPerBox, 10) || 0;
+        
+        // Internal stock is stored in Larris if larriPerBox is defined
+        const internalStock = larriPerBoxNum > 0 ? inputStock * larriPerBoxNum : inputStock;
+
         let status = 'Active';
-        if (stockNum === 0) status = 'Out of Stock';
-        else if (stockNum < 10) status = 'Low Stock';
+        if (internalStock <= 0) status = 'Out of Stock';
+        else if (internalStock < (larriPerBoxNum > 0 ? larriPerBoxNum * 2 : 10)) status = 'Low Stock';
 
         let imageUrl = selectedItem.img || '';
         if (editProduct.compressedImage) {
             imageUrl = editProduct.compressedImage;
-        } else if (editProduct.image) {
-            // Fallback: if somehow it wasn't pre-processed
-            try {
-                imageUrl = await compressImage(editProduct.image);
-            } catch (err) {
-                console.error("Fallback image processing failed:", err);
-                setIsPublishing(false);
-                return;
-            }
         }
 
-        const productData = {
-            ...selectedItem,
+        const updates = {
             name: editProduct.name,
-            category: editProduct.category,
-            unit: editProduct.unit || 'Per Box',
-            price: parseFloat(editProduct.price) || 0,
-            stock: stockNum,
+            priceBox: parseFloat(editProduct.priceBox) || 0,
+            priceLarri: parseFloat(editProduct.priceLarri) || 0,
+            discount: parseFloat(editProduct.discount) || 0,
+            description: editProduct.description,
+            stock: internalStock,
+            larriPerBox: larriPerBoxNum || null,
             status: status,
             img: imageUrl,
-            description: editProduct.description,
-            specification: editProduct.specification,
-            highlights: editProduct.highlights,
-            discount: parseFloat(editProduct.discount) || 0,
+            category: editProduct.category,
+            specification: editProduct.specification || '',
+            highlights: editProduct.highlights || '',
             updatedAt: new Date().toISOString()
         };
 
         try {
-            await update(ref(db, `products/${selectedItem.firebaseId}`), productData);
+            await update(ref(db, `products/${selectedItem.firebaseId}`), updates);
             setIsUpdateModalOpen(false);
             setSelectedItem(null);
         } catch (err) {
@@ -302,14 +307,31 @@ const AdminInventory = () => {
 
     const handleAddProductSubmit = async (e) => {
         e.preventDefault();
-        if (isPublishing) return;
+        
+        if (!newProduct.name || !newProduct.priceBox || !newProduct.stock || !newProduct.category) {
+            alert("⚠️ Please fill all required fields (Name, Price Box, Stock, Category).");
+            return;
+        }
+
+        const priceBoxNum = parseFloat(newProduct.priceBox) || 0;
+        const priceLarriNum = parseFloat(newProduct.priceLarri) || 0;
+        const discountNum = parseFloat(newProduct.discount || 0);
+        const inputStock = parseInt(newProduct.stock);
+        const larriPerBoxNum = parseInt(newProduct.larriPerBox) || 0;
+
+        if (isNaN(inputStock)) {
+            alert("⚠️ Please enter a valid number for Stock.");
+            return;
+        }
+
+        const internalStock = larriPerBoxNum > 0 ? inputStock * larriPerBoxNum : inputStock;
+
         setIsPublishing(true);
 
         let imageUrl = '';
         if (newProduct.compressedImage) {
             imageUrl = newProduct.compressedImage;
         } else if (newProduct.image) {
-            // Fallback
             try {
                 imageUrl = await compressImage(newProduct.image);
             } catch (err) {
@@ -319,28 +341,19 @@ const AdminInventory = () => {
             }
         }
 
-        const priceNum = parseFloat(newProduct.price);
-        const stockNum = parseInt(newProduct.stock, 10);
-        const discountNum = parseFloat(newProduct.discount || 0);
-
-        if (isNaN(priceNum) || isNaN(stockNum)) {
-            alert("⚠️ Please enter valid numbers for Price and Stock.");
-            setIsPublishing(false);
-            return;
-        }
-
         const productData = {
             name: newProduct.name,
-            category: newProduct.category,
-            unit: newProduct.unit || 'Per Box',
-            price: priceNum,
-            stock: stockNum,
-            status: stockNum === 0 ? 'Out of Stock' : stockNum < 10 ? 'Low Stock' : 'Active',
-            img: imageUrl,
+            priceBox: priceBoxNum,
+            priceLarri: priceLarriNum,
+            discount: discountNum,
             description: newProduct.description,
-            specification: newProduct.specification,
-            highlights: newProduct.highlights,
-            discount: isNaN(discountNum) ? 0 : discountNum,
+            stock: internalStock,
+            larriPerBox: larriPerBoxNum || null,
+            status: internalStock <= 0 ? 'Out of Stock' : internalStock < (larriPerBoxNum > 0 ? larriPerBoxNum * 2 : 10) ? 'Low Stock' : 'Active',
+            img: imageUrl,
+            category: newProduct.category,
+            specification: newProduct.specification || '',
+            highlights: newProduct.highlights || '',
             createdAt: new Date().toISOString()
         };
 
@@ -348,7 +361,7 @@ const AdminInventory = () => {
             await push(ref(db, 'products'), productData);
             setIsAddModalOpen(false);
             setNewProduct({
-                name: '', price: '', discount: '', description: '', image: null, stock: '', category: 'Vegetables', unit: 'Per Box', specification: '', highlights: '', compressedImage: null, isProcessingImage: false
+                name: '', priceBox: '', priceLarri: '', larriPerBox: '', discount: '', description: '', image: null, stock: '', category: 'Select Category', specification: '', highlights: '', compressedImage: null, isProcessingImage: false
             });
         } catch (err) {
             console.error("Add product failed:", err);
@@ -375,8 +388,10 @@ const AdminInventory = () => {
 
     const handleQuickStockUpdate = async (product, delta) => {
         const currentStock = parseInt(product.stock || 0);
-        const nextStock = Math.max(0, currentStock + delta);
-        const status = nextStock === 0 ? 'Out of Stock' : nextStock < 10 ? 'Low Stock' : 'Active';
+        const larriPerBoxNum = parseInt(product.larriPerBox) || 0;
+        const actualDelta = larriPerBoxNum > 0 ? delta * larriPerBoxNum : delta;
+        const nextStock = Math.max(0, currentStock + actualDelta);
+        const status = nextStock === 0 ? 'Out of Stock' : nextStock < (larriPerBoxNum > 0 ? larriPerBoxNum * 2 : 10) ? 'Low Stock' : 'Active';
 
         try {
             await update(ref(db, `products/${product.firebaseId}`), {
@@ -393,7 +408,20 @@ const AdminInventory = () => {
     const stats = useMemo(() => {
         const lowStockItems = products.filter(p => p.stock > 0 && p.stock < 10);
         const outOfStockItems = products.filter(p => !p.stock || p.stock === 0);
-        const inventoryValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0);
+        const inventoryValue = products.reduce((sum, p) => {
+            let value = 0;
+            const stock = p.stock || 0;
+            if (p.larriPerBox && p.larriPerBox > 0) {
+                if (p.priceBox) {
+                    value = (stock / p.larriPerBox) * p.priceBox;
+                } else if (p.priceLarri) {
+                    value = stock * p.priceLarri;
+                }
+            } else {
+                value = stock * (p.priceBox || p.priceLarri || p.price || 0);
+            }
+            return sum + value;
+        }, 0);
 
         return {
             totalProducts: products.length,
@@ -405,13 +433,12 @@ const AdminInventory = () => {
 
     return (
         <div className="max-w-7xl mx-auto w-full animate-fade-in pb-12 px-2 sm:px-4">
-            {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10 px-0">
                 {[
                     { label: 'TOTAL ITEMS', value: stats.totalProducts, icon: <PackageCheck size={20} />, color: 'emerald' },
                     { label: 'LOW STOCK', value: stats.lowStock.length, icon: <TrendingDown size={20} />, color: 'amber' },
                     { label: 'OUT OF STOCK', value: stats.outOfStock.length, icon: <AlertTriangle size={20} />, color: 'rose' },
-                    { label: 'INVENTORY VALUE', value: `₹${(stats.inventoryValue / 1000).toFixed(1)}k`, icon: <BoxSelect size={20} />, color: 'indigo' }
+                    { label: 'INVENTORY VALUE', value: `₹${Math.round(stats.inventoryValue).toLocaleString('en-IN')}`, icon: <BoxSelect size={20} />, color: 'indigo' }
                 ].map((stat, i) => (
                     <div key={i} className="bg-white rounded-3xl p-5 md:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.03)] border border-slate-100 flex items-center justify-between group hover:border-amber-500/20 transition-all">
                         <div>
@@ -425,7 +452,6 @@ const AdminInventory = () => {
                 ))}
             </div>
 
-            {/* Main Inventory Card */}
             <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden">
                 <div className="p-5 md:p-8 border-b border-slate-50">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
@@ -460,7 +486,6 @@ const AdminInventory = () => {
                         </div>
                     </div>
 
-                    {/* Dynamic Filters Strip */}
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-2 shrink-0">Status:</span>
@@ -490,7 +515,6 @@ const AdminInventory = () => {
                     </div>
                 </div>
 
-                {/* Mobile View: Cards */}
                 <div className="md:hidden divide-y divide-slate-50 px-5">
                     {isLoading ? (
                         <div className="py-20 text-center flex flex-col items-center gap-4">
@@ -549,7 +573,6 @@ const AdminInventory = () => {
                     )}
                 </div>
 
-                {/* Desktop View: Table */}
                 <div className="w-full overflow-x-auto hidden md:block">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -575,6 +598,15 @@ const AdminInventory = () => {
                             ) : filteredProducts.map((item) => {
                                 const committed = getCommittedStock(item.firebaseId);
                                 const available = Math.max(0, (item.stock || 0) - committed);
+
+                                const formatStock = (stockVal, larriPerBox) => {
+                                    if (!larriPerBox || larriPerBox <= 0) return `${stockVal}`;
+                                    const boxes = Math.floor(stockVal / larriPerBox);
+                                    const larris = stockVal % larriPerBox;
+                                    if (boxes > 0 && larris > 0) return `${boxes} Box, ${larris} Larri`;
+                                    if (boxes > 0) return `${boxes} Box`;
+                                    return `${larris} Larri`;
+                                };
 
                                 return (
                                     <tr key={item.firebaseId} className="hover:bg-slate-50/50 transition-colors group">
@@ -602,7 +634,7 @@ const AdminInventory = () => {
                                                     -
                                                 </button>
                                                 <span className={`text-sm font-black min-w-[30px] ${item.stock < 10 ? 'text-rose-600 animate-pulse' : 'text-slate-700'}`}>
-                                                    {item.stock}
+                                                    {formatStock(item.stock, item.larriPerBox)}
                                                 </span>
                                                 <button
                                                     onClick={() => handleQuickStockUpdate(item, 1)}
@@ -613,10 +645,10 @@ const AdminInventory = () => {
                                             </div>
                                         </td>
                                         <td className="py-5 px-6 text-center">
-                                            <span className={`text-sm font-black ${committed > 0 ? 'text-amber-500' : 'text-slate-400'}`}>{committed}</span>
+                                            <span className={`text-sm font-black ${committed > 0 ? 'text-amber-500' : 'text-slate-400'}`}>{formatStock(committed, item.larriPerBox)}</span>
                                         </td>
                                         <td className="py-5 px-6 text-center">
-                                            <span className={`text-sm font-black ${available < 10 ? 'text-amber-500' : 'text-amber-600'}`}>{available}</span>
+                                            <span className={`text-sm font-black ${available < 10 ? 'text-amber-500' : 'text-amber-600'}`}>{formatStock(available, item.larriPerBox)}</span>
                                         </td>
                                         <td className="py-5 px-6 text-center">
                                             <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${available === 0 ? 'bg-rose-50 text-rose-500' :
@@ -652,7 +684,6 @@ const AdminInventory = () => {
                 </div>
             </div>
 
-            {/* Update Product Modal Overlay */}
             {isUpdateModalOpen && selectedItem && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsUpdateModalOpen(false)}></div>
@@ -673,7 +704,6 @@ const AdminInventory = () => {
 
                         <form onSubmit={handleProductUpdate} className="p-5 md:p-8">
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                                {/* Left Column: Image Upload */}
                                 <div className="lg:col-span-1 space-y-6">
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-2">Product Image (Leave empty to keep current)</label>
@@ -720,9 +750,7 @@ const AdminInventory = () => {
                                     </div>
                                 </div>
 
-                                {/* Right Column: Details */}
                                 <div className="lg:col-span-2 space-y-6">
-                                    {/* Row 1 */}
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-2">Product Name <span className="text-rose-500">*</span></label>
                                         <input
@@ -736,7 +764,6 @@ const AdminInventory = () => {
                                         />
                                     </div>
 
-                                    {/* Row 2: Category, Unit & Quantity */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 mb-2">Category <span className="text-rose-500">*</span></label>
@@ -746,31 +773,27 @@ const AdminInventory = () => {
                                                 onChange={handleEditInputChange}
                                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-600 transition-all appearance-none"
                                             >
-                                                {allCategoryOptions.length > 0 ? (
-                                                    allCategoryOptions.map((catName) => (
-                                                        <option key={catName} value={catName}>
-                                                            {catName}
-                                                        </option>
-                                                    ))
-                                                ) : (
-                                                    <option value="">No Categories Available</option>
-                                                )}
+                                                {allCategoryOptions.map((catName) => (
+                                                    <option key={catName} value={catName}>
+                                                        {catName}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-2">Unit Type <span className="text-rose-500">*</span></label>
-                                            <select
-                                                name="unit"
-                                                value={editProduct.unit || 'Per Box'}
+                                            <label className="block text-sm font-bold text-slate-700 mb-2">Larris per Box</label>
+                                            <input
+                                                type="number"
+                                                name="larriPerBox"
+                                                value={editProduct.larriPerBox}
                                                 onChange={handleEditInputChange}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all appearance-none"
-                                            >
-                                                <option value="Per Box">Per Box</option>
-                                                <option value="Per Larri">Per Larri</option>
-                                            </select>
+                                                min="1"
+                                                placeholder="e.g. 20"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-600 transition-all placeholder:font-medium"
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-2">Quantity (Stock) <span className="text-rose-500">*</span></label>
+                                            <label className="block text-sm font-bold text-slate-700 mb-2">Quantity (Boxes) <span className="text-rose-500">*</span></label>
                                             <input
                                                 type="number"
                                                 name="stock"
@@ -784,20 +807,32 @@ const AdminInventory = () => {
                                         </div>
                                     </div>
 
-                                    {/* Row 3: Pricing */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Row 3: Prices & Discount */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-2">Price (₹) <span className="text-rose-500">*</span></label>
+                                            <label className="block text-sm font-bold text-slate-700 mb-2">Price (Per Box) ₹</label>
                                             <input
                                                 type="number"
-                                                name="price"
-                                                value={editProduct.price}
+                                                name="priceBox"
+                                                value={editProduct.priceBox}
                                                 onChange={handleEditInputChange}
                                                 min="0"
                                                 step="0.01"
                                                 placeholder="0.00"
                                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-600 transition-all placeholder:font-medium"
-                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-700 mb-2">Price (Per Larri) ₹</label>
+                                            <input
+                                                type="number"
+                                                name="priceLarri"
+                                                value={editProduct.priceLarri}
+                                                onChange={handleEditInputChange}
+                                                min="0"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-600 transition-all placeholder:font-medium"
                                             />
                                         </div>
                                         <div>
@@ -986,7 +1021,6 @@ const AdminInventory = () => {
                                         />
                                     </div>
 
-                                    {/* Row 2: Category, Unit & Quantity */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div>
                                             <label className="block text-sm font-bold text-slate-700 mb-2">Category <span className="text-rose-500">*</span></label>
@@ -994,7 +1028,7 @@ const AdminInventory = () => {
                                                 name="category"
                                                 value={newProduct.category}
                                                 onChange={handleInputChange}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all appearance-none"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-600 transition-all appearance-none"
                                             >
                                                 {allCategoryOptions.length > 0 ? (
                                                     allCategoryOptions.map((catName) => (
@@ -1008,19 +1042,19 @@ const AdminInventory = () => {
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-2">Unit Type <span className="text-rose-500">*</span></label>
-                                            <select
-                                                name="unit"
-                                                value={newProduct.unit || 'Per Box'}
+                                            <label className="block text-sm font-bold text-slate-700 mb-2">Larris per Box</label>
+                                            <input
+                                                type="number"
+                                                name="larriPerBox"
+                                                value={newProduct.larriPerBox}
                                                 onChange={handleInputChange}
-                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all appearance-none"
-                                            >
-                                                <option value="Per Box">Per Box</option>
-                                                <option value="Per Larri">Per Larri</option>
-                                            </select>
+                                                min="1"
+                                                placeholder="e.g. 20"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all placeholder:font-medium"
+                                            />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-2">Quantity (Stock) <span className="text-rose-500">*</span></label>
+                                            <label className="block text-sm font-bold text-slate-700 mb-2">Quantity (Boxes) <span className="text-rose-500">*</span></label>
                                             <input
                                                 type="number"
                                                 name="stock"
@@ -1034,20 +1068,32 @@ const AdminInventory = () => {
                                         </div>
                                     </div>
 
-                                    {/* Row 3: Pricing */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Row 3: Prices & Discount */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-2">Price (₹) <span className="text-rose-500">*</span></label>
+                                            <label className="block text-sm font-bold text-slate-700 mb-2">Price (Per Box) ₹</label>
                                             <input
                                                 type="number"
-                                                name="price"
-                                                value={newProduct.price}
+                                                name="priceBox"
+                                                value={newProduct.priceBox}
                                                 onChange={handleInputChange}
                                                 min="0"
                                                 step="0.01"
                                                 placeholder="0.00"
                                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-600 transition-all placeholder:font-medium"
-                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-700 mb-2">Price (Per Larri) ₹</label>
+                                            <input
+                                                type="number"
+                                                name="priceLarri"
+                                                value={newProduct.priceLarri}
+                                                onChange={handleInputChange}
+                                                min="0"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-600 transition-all placeholder:font-medium"
                                             />
                                         </div>
                                         <div>

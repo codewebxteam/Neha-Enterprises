@@ -20,13 +20,15 @@ const cartReducer = (state, action) => {
       const existing = state.find(
         (item) =>
           item.id === action.payload.id &&
-          item.category === action.payload.category
+          item.category === action.payload.category &&
+          item.selectedUnit === action.payload.selectedUnit
       );
 
       if (existing) {
         return state.map((item) =>
           item.id === action.payload.id &&
-            item.category === action.payload.category
+          item.category === action.payload.category &&
+          item.selectedUnit === action.payload.selectedUnit
             ? { ...item, quantity: item.quantity + action.payload.quantity }
             : item
         );
@@ -40,14 +42,16 @@ const cartReducer = (state, action) => {
         (item) =>
           !(
             item.id === action.payload.id &&
-            item.category === action.payload.category
+            item.category === action.payload.category &&
+            item.selectedUnit === action.payload.selectedUnit
           )
       );
 
     case 'UPDATE_QUANTITY':
       return state.map((item) =>
         item.id === action.payload.id &&
-          item.category === action.payload.category
+        item.category === action.payload.category &&
+        item.selectedUnit === action.payload.selectedUnit
           ? { ...item, quantity: Math.max(1, action.payload.quantity) }
           : item
       );
@@ -126,12 +130,12 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: 'ADD_TO_CART', payload: { ...product, quantity } });
   }, []);
 
-  const removeFromCart = useCallback((id, category) => {
-    dispatch({ type: 'REMOVE_FROM_CART', payload: { id, category } });
+  const removeFromCart = useCallback((id, category, selectedUnit) => {
+    dispatch({ type: 'REMOVE_FROM_CART', payload: { id, category, selectedUnit } });
   }, []);
 
-  const updateQuantity = useCallback((id, category, quantity) => {
-    dispatch({ type: 'UPDATE_QUANTITY', payload: { id, category, quantity } });
+  const updateQuantity = useCallback((id, category, selectedUnit, quantity) => {
+    dispatch({ type: 'UPDATE_QUANTITY', payload: { id, category, selectedUnit, quantity } });
   }, []);
 
   const clearCart = useCallback(() => {

@@ -13,7 +13,7 @@ import { ref, update, get } from 'firebase/database';
 import Loader from '../components/common/Loader';
 
 
-const adminEmails = ['meraj786@gmail.com', 'gokulgorakhpur@gmail.com', 'gokulgorakhpur.admin@gmail.com', 'admin@gmail.com'];
+const adminEmails = ['meraj786@gmail.com', 'gokulgorakhpur26@gmail.com', 'admin@gmail.com'];
 
 export const isAdminEmail = (email) => {
     if (!email) return false;
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
                 }
 
                 const isAdmin = isAdminEmail(currentUser.email) || (dbUserData && dbUserData.role === 'admin');
-                
+
                 const userData = {
                     id: currentUser.uid,
                     email: currentUser.email || null,
@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
-    const signup = useCallback(async (name, email, password) => {
+    const signup = useCallback(async (name, email, password, phone = '') => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             await updateProfile(userCredential.user, { displayName: name });
@@ -127,6 +127,7 @@ export const AuthProvider = ({ children }) => {
                 id: userCredential.user.uid,
                 email: userCredential.user.email,
                 name: name,
+                phone: phone,
                 role: 'member',
                 joinedAt: userCredential.user.metadata.creationTime || new Date().toISOString(),
                 lastLogin: new Date().toISOString()

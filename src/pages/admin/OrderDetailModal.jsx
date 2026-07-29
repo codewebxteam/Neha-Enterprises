@@ -1,12 +1,38 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { realtimeDb as db } from '../../firebase';
+import { ref, update } from 'firebase/database';
 import { ArrowLeft, User, MapPin, Package, CreditCard, Clock, Phone, Mail, Navigation } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useScrollLock from '../../hooks/useScrollLock';
 
 const OrderDetailModal = ({ order, onClose }) => {
     useScrollLock(!!order);
+    const [discountAmount, setDiscountAmount] = useState('');
+    const [isApplying, setIsApplying] = useState(false);
 
     if (!order) return null;
+
+    const handleApplyDiscount = async () => {
+        const amt = parseFloat(discountAmount);
+        if (isNaN(amt) || amt < 0) return;
+        setIsApplying(true);
+        try {
+            const orderRef = ref(db, `orders/${order.firebaseId || order.id || order.orderId}`);
+            // Recalculate original grand total without discount
+            const originalSubtotal = order.subtotal || (order.grandTotal + (order.adminDiscount || 0) - (order.tax || 0) - (order.shipping || 0));
+            const newTotal = originalSubtotal + (order.tax || 0) + (order.shipping || 0) - amt;
+            await update(orderRef, {
+                adminDiscount: amt,
+                grandTotal: newTotal
+            });
+            alert('Discount applied successfully!');
+            setDiscountAmount('');
+        } catch (e) {
+            console.error(e);
+            alert('Failed to apply discount');
+        }
+        setIsApplying(false);
+    };
 
     const formatDate = (dateString, includeTime = false) => {
         if (!dateString) return 'N/A';
@@ -240,6 +266,37 @@ const OrderDetailModal = ({ order, onClose }) => {
                                                 <span>Shipping</span>
                                                 <span className="text-amber-600 italic uppercase">Free</span>
                                             </div>
+                                            
+                                            {/* Admin Discount Control */}
+                                            <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200 border-dashed">
+                                                <div className="flex justify-between items-center text-[10px] md:text-sm font-bold text-slate-500 uppercase tracking-widest">
+                                                    <span>Admin Discount</span>
+                                                    {order.adminDiscount > 0 ? (
+                                                        <span className="text-green-600">-₹{order.adminDiscount.toLocaleString('en-IN')}</span>
+                                                    ) : (
+                                                        <span>₹0</span>
+                                                    )}
+                                                </div>
+                                                {(order.status !== 'Delivered' && order.status !== 'Success' && order.status !== 'Cancelled' && order.status !== 'Returned') && (
+                                                    <div className="flex gap-2">
+                                                        <input 
+                                                            type="number" 
+                                                            placeholder="Discount Amt" 
+                                                            value={discountAmount}
+                                                            onChange={(e) => setDiscountAmount(e.target.value)}
+                                                            className="w-full text-xs p-2 border border-slate-200 rounded-lg outline-none focus:border-indigo-500"
+                                                        />
+                                                        <button 
+                                                            onClick={handleApplyDiscount}
+                                                            disabled={isApplying || !discountAmount}
+                                                            className="px-3 py-2 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                                                        >
+                                                            Apply
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             <div className="h-px bg-slate-200 my-4" />
                                             <div className="flex justify-between items-center">
                                                 <span className="text-xs md:text-base font-black text-slate-900 uppercase tracking-tighter">Total</span>

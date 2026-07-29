@@ -91,7 +91,7 @@ const LegalModal = ({ isOpen, onClose, type }) => {
       title: 'Grievance Redressal',
       lastUpdated: 'March 10, 2026',
       sections: [
-        { heading: '1. Grievance Officer', text: 'In accordance with consumer protection rules, our Grievance Officer can be reached at grievance@nehaenterprises.com.' },
+        { heading: '1. Grievance Officer', text: 'In accordance with consumer protection rules, our Grievance Officer can be reached at gokulgorakhpur26@gmail.com.' },
         { heading: '2. Resolution Timeline', text: 'We acknowledge complaints within 24 hours and aim to resolve them within 15 days of receipt.' }
       ]
     },

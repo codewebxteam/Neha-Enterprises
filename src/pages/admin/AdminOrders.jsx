@@ -3,7 +3,7 @@ import * as XLSX from 'xlsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import { isToday, isThisWeek, isThisMonth, isThisYear, parseISO, isValid, differenceInDays, format } from 'date-fns';
 import { realtimeDb as db } from '../../firebase';
-import { ref, onValue, update, remove } from 'firebase/database';
+import { ref, onValue, update, remove, get } from 'firebase/database';
 import { Download, Eye, X, Check, ShoppingCart, FileText, Search, MoreVertical, AlertTriangle, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import OrderDetailModal from './OrderDetailModal';
@@ -69,7 +69,11 @@ const AdminOrders = () => {
                             if (updatedTimeline.length > 0 && targetIndex !== undefined) {
                                 updatedTimeline = updatedTimeline.map((step, idx) => {
                                     if (idx <= targetIndex) {
-                                        return { ...step, completed: true };
+                                        return { 
+                                            ...step, 
+                                            completed: true,
+                                            date: step.completed && step.date ? step.date : new Date().toISOString()
+                                        };
                                     }
                                     return step;
                                 });
@@ -101,7 +105,12 @@ const AdminOrders = () => {
         return () => unsubOrders();
     }, []);
 
-    const handleStatusChange = (order, newStatus) => {
+    const handleStatusChange = async (order, newStatus) => {
+        if (newStatus === 'Delivered') {
+            const confirm = window.confirm("Are you sure you want to mark this order as Delivered? Once delivered, it cannot be edited, cancelled, or updated.");
+            if (!confirm) return;
+        }
+
         const orderRef = ref(db, `orders/${order.firebaseId}`);
 
          // Update timeline if it exists
@@ -112,7 +121,11 @@ const AdminOrders = () => {
         if (updatedTimeline.length > 0 && targetIndex !== undefined) {
             updatedTimeline = updatedTimeline.map((step, idx) => {
                 if (idx <= targetIndex) {
-                    return { ...step, completed: true };
+                    return { 
+                        ...step, 
+                        completed: true,
+                        date: step.completed && step.date ? step.date : new Date().toISOString()
+                    };
                 }
                 return step;
             });
@@ -123,7 +136,50 @@ const AdminOrders = () => {
             updates.timeline = updatedTimeline;
         }
 
-        update(orderRef, updates);
+        // Deduct stock if marking as Delivered
+        if (newStatus === 'Delivered' && !order.stockDeducted) {
+            updates.stockDeducted = true;
+            try {
+                const productsRef = ref(db, 'products');
+                const productsSnap = await get(productsRef);
+                if (productsSnap.exists()) {
+                    const products = productsSnap.val();
+                    const productUpdates = {};
+                    let hasStockUpdates = false;
+
+                    if (order.items && Array.isArray(order.items)) {
+                        order.items.forEach(item => {
+                            const productId = item.id || item.firebaseId;
+                            const product = products[productId];
+                            if (product) {
+                                hasStockUpdates = true;
+                                const qty = parseInt(item.quantity) || 1;
+                                let unitsToDeduct = qty;
+                                
+                                const isBox = item.selectedUnit === 'Box' || item.unit === 'Box';
+                                const larriPerBox = parseInt(item.larriPerBox || product.larriPerBox) || 0;
+                                
+                                if (isBox && larriPerBox > 0) {
+                                    unitsToDeduct = qty * larriPerBox;
+                                }
+
+                                const currentStock = parseInt(product.stock) || 0;
+                                productUpdates[`${productId}/stock`] = Math.max(0, currentStock - unitsToDeduct);
+                            }
+                        });
+                    }
+
+                    if (hasStockUpdates) {
+                        await update(productsRef, productUpdates);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to deduct stock:", err);
+                alert("Status updated, but failed to deduct stock automatically due to a network error.");
+            }
+        }
+
+        await update(orderRef, updates);
     };
 
     const handleCancelOrder = (firebaseId) => {
@@ -345,7 +401,6 @@ const AdminOrders = () => {
                                                 <option value="Shipped">Shipped</option>
                                                 <option value="Delivered">Delivered</option>
                                                 <option value="Cancelled">Cancelled</option>
-                                                <option value="Returned">Returned</option>
                                             </select>
                                         </div>
                                     </div>
@@ -396,22 +451,27 @@ const AdminOrders = () => {
                                         <span className="font-black text-[#111827] text-sm">₹{item.grandTotal || item.amount || 0}</span>
                                     </td>
                                     <td className="py-5 px-6 text-center">
-                                        <select
-                                            value={item.status === 'Success' ? 'Delivered' : item.status}
-                                            onChange={(e) => handleStatusChange(item, e.target.value)}
-                                            className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full inline-block min-w-[120px] border-none focus:ring-4 focus:ring-amber-500/10 cursor-pointer transition-all ${(item.status === 'Delivered' || item.status === 'Success') ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/20' :
-                                                (item.status === 'Pending' || item.status === 'Placed') ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' :
-                                                        (item.status === 'Cancelled' || item.status === 'Returned') ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' :
-                                                            'bg-amber-600 text-white shadow-lg shadow-amber-600/20'
+                                        {(item.status === 'Delivered' || item.status === 'Success') ? (
+                                            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full inline-block min-w-[120px] bg-amber-600 text-white shadow-md opacity-90 cursor-not-allowed select-none">
+                                                Delivered
+                                            </span>
+                                        ) : (
+                                            <select
+                                                value={item.status}
+                                                onChange={(e) => handleStatusChange(item, e.target.value)}
+                                                className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full inline-block min-w-[120px] border-none focus:ring-4 focus:ring-amber-500/10 cursor-pointer transition-all ${
+                                                    (item.status === 'Pending' || item.status === 'Placed') ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' :
+                                                    (item.status === 'Cancelled' || item.status === 'Returned') ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' :
+                                                    'bg-amber-600 text-white shadow-lg shadow-amber-600/20'
                                                 }`}
-                                        >
-                                            <option value="Pending">Pending</option>
-                                            <option value="Placed">Placed</option>
-                                            <option value="Shipped">Shipped</option>
-                                            <option value="Delivered">Delivered</option>
-                                            <option value="Cancelled">Cancelled</option>
-                                            <option value="Returned">Returned</option>
-                                        </select>
+                                            >
+                                                <option value="Pending">Pending</option>
+                                                <option value="Placed">Placed</option>
+                                                <option value="Shipped">Shipped</option>
+                                                <option value="Delivered">Delivered</option>
+                                                <option value="Cancelled">Cancelled</option>
+                                            </select>
+                                        )}
                                     </td>
                                     <td className="py-5 px-8 text-right">
                                         <div className="flex items-center justify-end gap-2">
@@ -439,7 +499,7 @@ const AdminOrders = () => {
                                                 >
                                                     <Trash2 size={14} strokeWidth={3} />
                                                 </button>
-                                            ) : (
+                                            ) : item.status !== 'Delivered' && item.status !== 'Success' && (
                                                 <button
                                                     onClick={() => handleCancelOrder(item.firebaseId)}
                                                     className="w-8 h-8 flex items-center justify-center bg-rose-50 text-rose-500 hover:bg-rose-600 hover:text-white rounded-lg border border-rose-100 transition-colors active:scale-95"

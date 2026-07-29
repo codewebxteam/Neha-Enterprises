@@ -23,10 +23,10 @@ const CartPage = () => {
     const closeConfirm = () =>
         setConfirmDialog((d) => ({ ...d, isOpen: false }));
 
-    const handleRemoveItem = (id, category, name) => openConfirm({
+    const handleRemoveItem = (id, category, name, selectedUnit) => openConfirm({
         title: 'Remove from Cart?',
         message: `Are you sure you want to remove "${name}" from your cart?`,
-        onConfirm: () => { removeFromCart(id, category); closeConfirm(); },
+        onConfirm: () => { removeFromCart(id, category, selectedUnit); closeConfirm(); },
     });
 
     const handleClearCart = () => openConfirm({
@@ -72,7 +72,12 @@ const CartPage = () => {
         );
     }
 
-    const CartItem = ({ item }) => (
+    const CartItem = ({ item }) => {
+        const maxAvailable = item.selectedUnit === 'Box' 
+            ? (item.larriPerBox && item.larriPerBox > 0 ? Math.floor((item.stock || 0) / item.larriPerBox) : (item.stock || 0))
+            : (item.stock || 0);
+
+        return (
         <motion.div
             layout
             initial={{ opacity: 0, x: -20 }}
@@ -97,7 +102,7 @@ const CartPage = () => {
                         </span>
                     </div>
                     <h4 style={{ fontFamily: "'Recoleta', Georgia, serif" }} className="text-xl sm:text-2xl font-bold text-[#27318a] tracking-tight leading-tight group-hover/link:text-amber-500 transition-colors truncate w-full">{item.name}</h4>
-                    <p className="text-[11px] sm:text-[12px] font-bold text-slate-400 uppercase tracking-widest mt-1">₹{item.price} / {item.unit === 'Per Larri' ? 'Larri' : item.unit === 'Per Box' ? 'Box' : (item.unit || 'Pc')}</p>
+                    <p className="text-[11px] sm:text-[12px] font-bold text-slate-400 uppercase tracking-widest mt-1">₹{item.price} / {item.selectedUnit || item.unit === 'Per Larri' ? 'Larri' : item.unit === 'Per Box' ? 'Box' : (item.unit || 'Pc')}</p>
                 </div>
             </Link>
 
@@ -105,7 +110,7 @@ const CartPage = () => {
             <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-8 w-full sm:w-auto mt-4 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-100/60">
                 <div className="flex items-center gap-2 sm:gap-3 bg-[#27318a] rounded-full px-2 py-1 sm:py-1.5 shadow-sm">
                     <button
-                        onClick={() => updateQuantity(item.id, item.category, item.quantity - 1)}
+                        onClick={() => updateQuantity(item.id, item.category, item.selectedUnit, item.quantity - 1)}
                         className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white hover:text-[#fce513] transition-colors"
                     >
                         <Minus size={12} />
@@ -113,17 +118,24 @@ const CartPage = () => {
                     <input
                         type="number"
                         min="1"
+                        max={maxAvailable}
                         value={item.quantity}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => {
                             const val = parseInt(e.target.value, 10);
-                            if (!isNaN(val) && val >= 1) updateQuantity(item.id, item.category, val);
+                            if (!isNaN(val) && val >= 1) updateQuantity(item.id, item.category, item.selectedUnit, Math.min(val, maxAvailable));
                         }}
                         className="w-10 sm:w-12 text-center font-black text-xs sm:text-sm text-white bg-transparent border-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                     <button
-                        onClick={() => updateQuantity(item.id, item.category, item.quantity + 1)}
-                        className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white hover:text-[#fce513] transition-colors"
+                        onClick={() => {
+                            if (item.quantity < maxAvailable) {
+                                updateQuantity(item.id, item.category, item.selectedUnit, item.quantity + 1);
+                            } else {
+                                alert(`Only ${maxAvailable} available in stock.`);
+                            }
+                        }}
+                        className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center transition-colors ${item.quantity >= maxAvailable ? 'text-white/30 cursor-not-allowed' : 'text-white hover:text-[#fce513]'}`}
                     >
                         <Plus size={12} />
                     </button>
@@ -137,7 +149,7 @@ const CartPage = () => {
                 </div>
 
                 <button
-                    onClick={() => handleRemoveItem(item.id, item.category, item.name)}
+                    onClick={() => handleRemoveItem(item.id, item.category, item.name, item.selectedUnit)}
                     className="absolute top-4 right-4 sm:relative sm:top-0 sm:right-0 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-2xl bg-[#fff2f2] text-[#ff6b6b] hover:bg-[#ff6b6b] hover:text-white transition-all shadow-sm shrink-0"
                 >
                     <Trash2 size={14} sm:size={16} strokeWidth={2.5} />
@@ -145,6 +157,7 @@ const CartPage = () => {
             </div>
         </motion.div>
     );
+    };
 
     return (
         <>
@@ -180,8 +193,8 @@ const CartPage = () => {
                             <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-4 sm:p-6 lg:p-8 shadow-sm border border-slate-100">
                                 <div className="space-y-4">
                                     <AnimatePresence>
-                                        {cartItems.map((item) => (
-                                            <CartItem key={`${item.category}-${item.id}`} item={item} />
+                                        {cartItems.map((item, index) => (
+                                            <CartItem key={`${item.category}-${item.id}-${item.selectedUnit || index}`} item={item} />
                                         ))}
                                     </AnimatePresence>
                                 </div>

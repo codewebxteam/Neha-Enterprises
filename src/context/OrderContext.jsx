@@ -100,10 +100,10 @@ export const OrderProvider = ({ children }) => {
             },
             timeline: [
                 { status: 'Pending', date: now.toISOString(), completed: true, desc: 'Awaiting confirmation from admin.' },
-                { status: 'Placed', date: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString(), completed: false, desc: 'Order will be placed after confirmation.' },
-                { status: 'Confirmed', date: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(), completed: false, desc: 'We are confirming your order.' },
-                { status: 'Shipped', date: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(), completed: false, desc: 'Your order is on the way.' },
-                { status: 'Delivered', date: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString(), completed: false, desc: 'Order delivered.' }
+                { status: 'Placed', completed: false, desc: 'Order will be placed after confirmation.' },
+                { status: 'Confirmed', completed: false, desc: 'We are confirming your order.' },
+                { status: 'Shipped', completed: false, desc: 'Your order is on the way.' },
+                { status: 'Delivered', completed: false, desc: 'Order delivered.' }
             ]
         };
 

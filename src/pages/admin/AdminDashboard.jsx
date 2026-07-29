@@ -288,16 +288,16 @@ const AdminDashboard = () => {
         const activeOrders = orders.filter(o => o.status !== 'Cancelled' && o.status !== 'Returned');
 
         // Sales Logic
-        const totalSales = activeOrders.reduce((sum, o) => sum + (o.grandTotal || o.amount || 0), 0);
+        const totalSales = activeOrders.reduce((sum, o) => sum + (o.grandTotal || o.amount || 0) + (o.adminDiscount || 0), 0);
         const curWeekSales = activeOrders
             .filter(o => new Date(o.date) >= oneWeekAgo)
-            .reduce((sum, o) => sum + (o.grandTotal || o.amount || 0), 0);
+            .reduce((sum, o) => sum + (o.grandTotal || o.amount || 0) + (o.adminDiscount || 0), 0);
         const prevWeekSales = activeOrders
             .filter(o => {
                 const d = new Date(o.date);
                 return d >= twoWeeksAgo && d < oneWeekAgo;
             })
-            .reduce((sum, o) => sum + (o.grandTotal || o.amount || 0), 0);
+            .reduce((sum, o) => sum + (o.grandTotal || o.amount || 0) + (o.adminDiscount || 0), 0);
 
         // Orders Logic
         const totalOrders = orders.length;
@@ -364,7 +364,7 @@ const AdminDashboard = () => {
                 if (!o.date) return false;
                 const date = new Date(o.date);
                 return date.getMonth() === m.month && date.getFullYear() === m.year;
-            }).reduce((sum, o) => sum + (o.grandTotal || o.amount || 0), 0);
+            }).reduce((sum, o) => sum + (o.grandTotal || o.amount || 0) + (o.adminDiscount || 0), 0);
             return {
                 name: m.label,
                 revenue: monthlyRevenue

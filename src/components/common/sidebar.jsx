@@ -53,13 +53,6 @@ const AccountSidebar = ({ isOpen, onClose }) => {
       badge: activeOrdersCount > 0 ? `${activeOrdersCount} Active` : null 
     },
     { 
-      id: 'wishlist', 
-      label: 'My Wishlist', 
-      desc: 'Your Favorite Items', 
-      icon: <Heart size={20} />, 
-      path: '/wishlist' 
-    },
-    { 
       id: 'cart', 
       label: 'My Cart', 
       desc: cartCount > 0 ? `${cartCount} items • ₹${grandTotal}` : 'Ready to Checkout?', 

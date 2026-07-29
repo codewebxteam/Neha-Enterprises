@@ -19,8 +19,8 @@ const AdminSettings = () => {
     const [formData, setFormData] = useState({
         // General Settings
         storeName: 'Neha Enterprises',
-        supportEmail: 'care@nehaenterprises.com',
-        supportPhone: '+91 9336020104',
+        supportEmail: 'gokulgorakhpur26@gmail.com',
+        supportPhone: '+91 8000668955',
         gstPercentage: '0',
         maintenanceMode: false,
 
@@ -40,7 +40,7 @@ const AdminSettings = () => {
         // Notification Settings
         orderEmails: true,
         promotionalEmails: false,
-        adminAlertsEmail: 'admin@nehaenterprises.com',
+        adminAlertsEmail: 'gokulgorakhpur26@gmail.com',
         maintenanceMessage: 'Neha Enterprises is currently under scheduled maintenance to bring you a better shopping experience. We\'ll be back shortly!'
     });
 

@@ -269,7 +269,7 @@ Mobile: ${formData.mobile}
 *Order ID:* ${newOrder?.id || 'N/A'}
 
 *Order Items:*
-${itemsToPass.map(item => `- ${item.name} x ${item.quantity} - ₹${(item.price * item.quantity).toLocaleString('en-IN')}`).join('\n')}
+${itemsToPass.map(item => `- ${item.name} (${item.selectedUnit || item.unit}) x ${item.quantity} - ₹${(item.price * item.quantity).toLocaleString('en-IN')}`).join('\n')}
 
 *Price Details:*
 Subtotal: ₹${subtotal.toLocaleString('en-IN')}
@@ -280,7 +280,7 @@ Tax: ₹${tax.toLocaleString('en-IN')}
 Please send the QR code for payment.`;
 
                 const encodedMessage = encodeURIComponent(message);
-                const whatsappUrl = `https://wa.me/919569603163?text=${encodedMessage}`;
+                const whatsappUrl = `https://wa.me/918000668955?text=${encodedMessage}`;
                 window.open(whatsappUrl, '_blank');
             }
 
@@ -431,7 +431,7 @@ Please send the QR code for payment.`;
                                                 <img src={item.img} alt={item.name} className="w-full h-full object-contain" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-[#3a3f30] leading-tight mb-1">{item.name}</p>
+                                                <p className="text-sm font-medium text-[#3a3f30] leading-tight mb-1">{item.name} ({item.selectedUnit || item.unit})</p>
                                                 <p className="text-[10px] text-slate-400 font-medium">Qty: {item.quantity}</p>
                                             </div>
                                             <span className="text-xs font-bold text-slate-500">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>

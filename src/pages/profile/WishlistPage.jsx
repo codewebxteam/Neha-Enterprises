@@ -5,7 +5,7 @@ import WishlistComponent from '../../components/profile/wishlist';
 
 const WishlistPage = () => {
     return (
-        <main className="min-h-screen bg-slate-50 pt-24 pb-12">
+        <main className="min-h-screen bg-slate-50 pt-[128px] sm:pt-[154px] pb-12">
             <div className="container mx-auto px-4 lg:px-8">
                 <div className="max-w-4xl mx-auto">
                     <motion.div

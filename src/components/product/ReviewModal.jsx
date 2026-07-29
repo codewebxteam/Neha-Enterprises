@@ -54,7 +54,6 @@ const ReviewModal = ({ product, user, onClose, onReviewSubmitted }) => {
     };
 
     const handleSubmit = async () => {
-        if (!comment.trim()) return;
         setIsSubmitting(true);
         try {
             const reviewsRef = ref(db, `reviews/${product.id}`);
@@ -205,9 +204,9 @@ const ReviewModal = ({ product, user, onClose, onReviewSubmitted }) => {
 
                     <button
                         onClick={handleSubmit}
-                        disabled={isSubmitting || !comment.trim()}
+                        disabled={isSubmitting}
                         className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest transition-all ${
-                            isSubmitting || !comment.trim() 
+                            isSubmitting 
                             ? 'bg-slate-100 text-slate-400' 
                             : 'bg-[#111827] text-white hover:bg-amber-600 shadow-xl shadow-amber-500/10'
                         }`}

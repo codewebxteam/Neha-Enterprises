@@ -4,25 +4,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Heart, Minus, Plus, ArrowLeft, Star, ShieldCheck, Truck, RefreshCw, Share2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { useWishlist } from '../../context/WishlistContext';
 import ShareModal from '../common/ShareModal';
 import RecommendedProducts from './RecommendedProducts';
 import ProductSkeleton from './ProductSkeleton';
 import { realtimeDb as db } from '../../firebase';
 import { ref, onValue } from 'firebase/database';
-import { getSeededReviewCount } from '../../utils/productUtils';
+
 
 const ProductDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { addToCart, addNotification } = useCart();
     const { user, openAuthModal } = useAuth();
-    const { toggleWishlist, isInWishlist } = useWishlist();
 
     const [product, setProduct] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState('description');
+    const [selectedUnit, setSelectedUnit] = useState('Box');
     const [isAdded, setIsAdded] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [realReviews, setRealReviews] = useState([]);
@@ -105,7 +104,7 @@ const ProductDetail = () => {
                             ...data,
                             id: id,
                             img: data.img || data.image || data.compressedImage || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&q=80',
-                            unit: data.unit || 'Kg',
+                            unit: data.unit || 'Box',
                             highlights: parsedHighlights,
                             specifications: parsedSpecs,
                             reviews: data.reviews || [],
@@ -113,6 +112,10 @@ const ProductDetail = () => {
                         };
 
                         setProduct(enrichedProduct);
+                        
+                        const hasBoxPrice = data.priceBox !== undefined && data.priceBox !== '';
+                        const hasLarriPrice = data.priceLarri !== undefined && data.priceLarri !== '';
+                        setSelectedUnit(hasBoxPrice ? 'Box' : (hasLarriPrice ? 'Larri' : (data.unit === 'Per Larri' ? 'Larri' : 'Box')));
 
                         const recentKey = 'gokulgorakhpur_recently_viewed';
                         const saved = localStorage.getItem(recentKey);
@@ -175,14 +178,24 @@ const ProductDetail = () => {
         );
     }
 
+    const hasBoxPrice = product?.priceBox !== undefined && product?.priceBox !== '';
+    const hasLarriPrice = product?.priceLarri !== undefined && product?.priceLarri !== '';
+    const currentPrice = selectedUnit === 'Box' 
+        ? (product.priceBox || product.price || 0) 
+        : (product.priceLarri || product.price || 0);
+
+    // Calculate Max Available based on selected unit and larriPerBox
+    const maxAvailable = selectedUnit === 'Box' 
+        ? (product.larriPerBox && product.larriPerBox > 0 ? Math.floor((product.stock || 0) / product.larriPerBox) : (product.stock || 0))
+        : (product.stock || 0);
+
     const getCartItem = () => {
-        const activeSize = getActiveSize();
         return {
             ...product,
             id: product.id,
             name: product.name,
-            price: Math.round(product.price * activeSize.ratio),
-            unit: activeSize.label,
+            price: currentPrice,
+            selectedUnit: selectedUnit,
             originalId: product.id
         };
     };
@@ -205,14 +218,6 @@ const ProductDetail = () => {
         }
         addToCart(getCartItem(), quantity);
         navigate('/cart');
-    };
-
-    const handleWishlistToggle = () => {
-        if (!user) {
-            openAuthModal('login');
-            return;
-        }
-        toggleWishlist(product);
     };
 
     const handleShare = () => {
@@ -275,16 +280,6 @@ const ProductDetail = () => {
                                     >
                                         <Share2 size={20} />
                                     </motion.button>
-                                    <motion.button
-                                        whileTap={{ scale: 0.8 }}
-                                        onClick={handleWishlistToggle}
-                                        className={`w-12 h-12 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-center transition-all ${isInWishlist(product.id, product.category)
-                                            ? 'bg-rose-50 text-rose-500 border-rose-100'
-                                            : 'bg-white text-slate-300 hover:text-rose-500'
-                                            }`}
-                                    >
-                                        <Heart size={20} fill={isInWishlist(product.id, product.category) ? 'currentColor' : 'none'} />
-                                    </motion.button>
                                 </div>
                             </div>
                         </div>
@@ -324,7 +319,7 @@ const ProductDetail = () => {
                                         {realReviews.length > 0 ? (realReviews.reduce((acc, r) => acc + r.rating, 0) / realReviews.length).toFixed(1) : '5.0'}
                                     </span>
                                     <span className="text-[10px] font-bold text-slate-400 ml-1 uppercase tracking-widest">
-                                        ({realReviews.length > 0 ? realReviews.length : getSeededReviewCount(product.id)} REVIEWS)
+                                        ({realReviews.length} REVIEWS)
                                     </span>
                                 </div>
                             </motion.div>
@@ -342,12 +337,42 @@ const ProductDetail = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.2 }}
-                                className="flex items-baseline gap-4 mb-8"
+                                className="flex flex-col gap-4 mb-8"
                             >
-                                <span className="text-5xl font-black text-[#27318a] tracking-tighter">₹{product.price * quantity}</span>
-                                <span className="text-lg font-bold text-slate-300 line-through">₹{Math.round(product.price * 1.5) * quantity}</span>
-                                <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest">35% OFF</span>
-                                <span className="text-xs text-white font-bold ml-2 bg-[#27318a] px-3 py-1 rounded-full">/ {product.unit === 'Per Larri' ? 'Larri' : product.unit === 'Per Box' ? 'Box' : (product.unit || 'Pc')}</span>
+                                {/* Unit Toggle */}
+                                {(hasBoxPrice && hasLarriPrice) ? (
+                                    <div className="flex bg-slate-100 rounded-xl p-1.5 w-max">
+                                        <button
+                                            onClick={() => setSelectedUnit('Box')}
+                                            className={`px-5 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all ${selectedUnit === 'Box' ? 'bg-white text-[#27318a] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                        >
+                                            Per Box
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedUnit('Larri')}
+                                            className={`px-5 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all ${selectedUnit === 'Larri' ? 'bg-white text-[#27318a] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                        >
+                                            Per Larri
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="w-max">
+                                        <span className="text-[#27318a] bg-blue-50 px-4 py-2 rounded-full border border-[#27318a]/10 text-[11px] font-black uppercase tracking-widest">
+                                            Per {selectedUnit}
+                                        </span>
+                                    </div>
+                                )}
+
+                                <div className="flex items-baseline gap-4">
+                                    <span className="text-5xl font-black text-[#27318a] tracking-tighter">₹{currentPrice * quantity}</span>
+                                    {product.discount > 0 && (
+                                        <>
+                                            <span className="text-lg font-bold text-slate-300 line-through">₹{Math.round(currentPrice * (1 + (product.discount / 100))) * quantity}</span>
+                                            <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest">{product.discount}% OFF</span>
+                                        </>
+                                    )}
+                                    <span className="text-xs text-white font-bold ml-2 bg-[#27318a] px-3 py-1 rounded-full">/ {selectedUnit}</span>
+                                </div>
                             </motion.div>
 
                             <motion.p
@@ -379,15 +404,24 @@ const ProductDetail = () => {
                                             value={quantity}
                                             onChange={(e) => {
                                                 const val = parseInt(e.target.value, 10);
-                                                if (!isNaN(val) && val >= 1) setQuantity(val);
-                                                else if (e.target.value === '') setQuantity(1);
+                                                if (!isNaN(val) && val >= 1) {
+                                                    setQuantity(Math.min(val, maxAvailable));
+                                                } else if (e.target.value === '') {
+                                                    setQuantity(1);
+                                                }
                                             }}
                                             className="w-14 h-10 text-center font-black text-lg text-[#27318a] bg-blue-50 border-2 border-[#27318a]/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#27318a]/30 focus:border-[#27318a] transition-all"
                                         />
                                         <button
-                                            onClick={() => setQuantity(q => q + 1)}
-                                            style={{ backgroundColor: '#fce513' }}
-                                            className="w-10 h-10 flex items-center justify-center text-[#27318a] rounded-xl hover:brightness-105 transition-colors"
+                                            onClick={() => {
+                                                if (quantity < maxAvailable) {
+                                                    setQuantity(q => q + 1);
+                                                } else {
+                                                    addNotification({ name: `${product.name} (Max Available Reached)` });
+                                                }
+                                            }}
+                                            style={{ backgroundColor: quantity >= maxAvailable ? '#f1f5f9' : '#fce513' }}
+                                            className={`w-10 h-10 flex items-center justify-center rounded-xl transition-colors ${quantity >= maxAvailable ? 'text-slate-400 cursor-not-allowed' : 'text-[#27318a] hover:brightness-105'}`}
                                         >
                                             <Plus size={16} />
                                         </button>
@@ -397,18 +431,27 @@ const ProductDetail = () => {
 
                             {/* Action Buttons */}
                             <div className="flex flex-col sm:flex-row gap-4">
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleAddToCart}
-                                    className={`flex-1 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 border-2 ${isAdded
-                                        ? 'bg-[#27318a] text-white border-[#27318a]'
-                                        : 'bg-white text-[#27318a] border-[#27318a] hover:bg-[#27318a] hover:text-white'
-                                        }`}
-                                >
-                                    <ShoppingCart size={18} />
-                                    {isAdded ? 'Added to Bag!' : 'Add to Bag'}
-                                </motion.button>
+                                {maxAvailable <= 0 ? (
+                                    <button
+                                        disabled
+                                        className="flex-1 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 border-2 bg-slate-200 text-slate-500 border-slate-200 cursor-not-allowed"
+                                    >
+                                        Out of Stock
+                                    </button>
+                                ) : (
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={handleAddToCart}
+                                        className={`flex-1 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 border-2 ${isAdded
+                                            ? 'bg-[#27318a] text-white border-[#27318a]'
+                                            : 'bg-white text-[#27318a] border-[#27318a] hover:bg-[#27318a] hover:text-white'
+                                            }`}
+                                    >
+                                        <ShoppingCart size={18} />
+                                        {isAdded ? 'Added to Bag!' : 'Add to Bag'}
+                                    </motion.button>
+                                )}
                                 <motion.button
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
@@ -503,7 +546,7 @@ const ProductDetail = () => {
                                                         <div className="text-right">
                                                             <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Total Reviews</p>
                                                             <p className="text-2xl font-black text-slate-900 leading-none">
-                                                                {realReviews.length > 0 ? realReviews.length : getSeededReviewCount(product.id)}
+                                                                {realReviews.length}
                                                             </p>
                                                         </div>
                                                     </div>

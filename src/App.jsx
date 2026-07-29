@@ -4,7 +4,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavig
 // Layout Components
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import FloatingCartButton from "./components/common/FloatingCartButton";
+import FloatingWhatsAppButton from "./components/common/FloatingWhatsAppButton";
+import FloatingCheckoutButton from "./components/common/FloatingCheckoutButton";
 import Loader from "./components/common/Loader";
 import ToastContainer from "./components/common/ToastContainer";
 
@@ -17,7 +18,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import AdminLogin from "./pages/auth/AdminLogin";
 import OrdersPage from "./pages/profile/OrdersPage";
-import WishlistPage from "./pages/profile/WishlistPage";
+
 import ProductDetail from "./components/product/ProductDetail";
 import Success from "./pages/Success";
 import Categories from "./pages/category/Categories";
@@ -32,7 +33,7 @@ import { ref, onValue } from "firebase/database";
 
 // Context Providers
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { CartProvider } from "./context/CartContext";
+import { CartProvider, useCart } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 
 // Admin Pages
@@ -59,6 +60,7 @@ const AdminProtectedRoute = ({ children }) => {
 
 function AppContent() {
   const { user, loading: authLoading } = useAuth();
+  const { cartItems } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
   const [settings, setSettings] = React.useState({});
@@ -122,7 +124,7 @@ function AppContent() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/profile" element={<Dashboard />} />
           <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
+
           <Route path="/categories" element={<Categories />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
@@ -154,7 +156,8 @@ function AppContent() {
 
       {/* Global Footer */}
       {!isAdminRoute && <Footer />}
-      {!isAdminRoute && <FloatingCartButton />}
+      {!isAdminRoute && (!cartItems || cartItems.length === 0) && <FloatingWhatsAppButton />}
+      {!isAdminRoute && <FloatingCheckoutButton />}
       <ToastContainer />
     </div>
   );
