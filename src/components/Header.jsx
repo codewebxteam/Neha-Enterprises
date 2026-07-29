@@ -110,10 +110,10 @@ const Header = () => {
         transition={{ duration: 0.35, ease: "easeInOut" }}
         className={`fixed top-0 left-0 right-0 w-full z-[60] transition-colors duration-300 group font-['Montserrat',sans-serif] ${isSolid ? 'bg-white shadow-md' : 'bg-transparent hover:bg-white'}`}
       >
-        {/* Top Announcement Bar - Exact #27318a & 18px Font */}
+        {/* Top Announcement Bar - Exact #27318a & Responsive Font */}
         <div 
-          style={{ backgroundColor: '#27318a', fontSize: '15px' }} 
-          className="text-white font-medium py-2 px-4 text-center tracking-wide w-full flex items-center justify-center min-h-[42px]"
+          style={{ backgroundColor: '#27318a' }} 
+          className="text-white font-medium py-1.5 sm:py-2 px-2 sm:px-4 text-center tracking-wide w-full flex items-center justify-center min-h-[32px] sm:min-h-[42px] text-[9px] sm:text-[13px] md:text-[15px] leading-tight"
         >
           <span>Authorized Independent Distributor of Gokul Snacks &bull; Delivery available across Gorakhpur.</span>
         </div>
